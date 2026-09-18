@@ -125,14 +125,8 @@ struct MainWindowView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
 
-            HStack {
-                Text(query.isEmpty ? "全部问题" : "搜索结果")
-                    .font(.headline)
-                Spacer()
-                Text("\(results.count)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+            Text(query.isEmpty ? "全部问题" : "搜索结果")
+                .font(.headline)
             .padding(.horizontal, 18)
             .padding(.top, 22)
             .padding(.bottom, 10)
@@ -165,8 +159,7 @@ struct MainWindowView: View {
         } else {
             ContentUnavailableView(
                 library.items.isEmpty ? "题库还是空的" : "选择一道问题",
-                systemImage: library.items.isEmpty ? "rectangle.stack.badge.plus" : "text.book.closed",
-                description: Text(library.items.isEmpty ? "点击工具栏的 + 添加第一条问答" : "从左侧选择问题，查看对应答案")
+                systemImage: library.items.isEmpty ? "rectangle.stack.badge.plus" : "text.book.closed"
             )
         }
     }
@@ -179,9 +172,6 @@ struct MainWindowView: View {
                         Text(item.question)
                             .font(.title2.bold())
                             .textSelection(.enabled)
-                        Text("题库答案")
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 0)
                     Button {
@@ -210,9 +200,6 @@ struct MainWindowView: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 7) {
                         Text(query).font(.title2.bold()).textSelection(.enabled)
-                        Label("AI 临时回答", systemImage: "sparkles")
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
                     }
                     Spacer()
                     if ai.state == .complete {
@@ -228,19 +215,17 @@ struct MainWindowView: View {
 
                 switch ai.state {
                 case .idle:
-                    Text("继续输入问题以获取 AI 回答")
-                        .foregroundStyle(.secondary)
+                    EmptyView()
                 case .waiting, .streaming:
                     HStack(spacing: 9) {
                         ProgressView().controlSize(.small)
                         Text(ai.state == .waiting ? "等待输入结束…" : "正在生成回答…")
-                            .foregroundStyle(.secondary)
                     }
                 case .complete:
                     EmptyView()
                 case .needsConfiguration:
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("请先配置远程模型").foregroundStyle(.secondary)
+                        Text("请先配置远程模型")
                         Button("打开模型设置") { openSettings() }
                     }
                 case .failed(let message):
@@ -293,7 +278,6 @@ private struct QuestionResultCard: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(preview)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }

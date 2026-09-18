@@ -21,10 +21,6 @@ struct AISettingsView: View {
                 SecureField("API Key", text: $settings.apiKey)
             }
 
-            PreferencesRowCaption(
-                "本地无匹配时，问题会自动发送到此 HTTPS 接口，请填写兼容 OpenAI Chat Completions 的完整地址"
-            )
-
             HStack(spacing: 12) {
                 Button("保存设置") { save() }
                     .buttonStyle(.borderedProminent)
@@ -40,7 +36,7 @@ struct AISettingsView: View {
             if let feedback {
                 PreferencesRowCaption(
                     verbatim: feedback,
-                    color: feedback == "连接成功" || feedback == "设置已保存" ? .secondary : .red
+                    color: feedback == "连接成功" || feedback == "设置已保存" ? .primary : .red
                 )
             }
 

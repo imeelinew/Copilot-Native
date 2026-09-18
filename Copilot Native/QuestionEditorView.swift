@@ -56,11 +56,7 @@ struct QuestionEditorView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("答案").font(.headline)
-                    Spacer()
-                    Text("支持 Markdown 和代码块").font(.caption).foregroundStyle(.secondary)
-                }
+                Text("答案").font(.headline)
                 ZStack(alignment: .topLeading) {
                     if answer.isEmpty {
                         Text("输入答案，可使用 Markdown 列表和代码块")

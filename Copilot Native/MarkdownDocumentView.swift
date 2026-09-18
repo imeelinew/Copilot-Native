@@ -230,11 +230,8 @@ struct MarkdownDocumentView: View {
                     }
                 }
             }
-        case .code(let language, let content):
+        case .code(_, let content):
             VStack(alignment: .leading, spacing: 8) {
-                if !language.isEmpty {
-                    Text(language).font(.caption.weight(.medium)).foregroundStyle(.secondary)
-                }
                 ScrollView(.horizontal) {
                     Text(verbatim: content)
                         .font(.system(.body, design: .monospaced))
