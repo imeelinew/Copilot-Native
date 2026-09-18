@@ -1,10 +1,5 @@
 import SwiftUI
 
-private enum MainPage: String, Hashable {
-    case library
-    case settings
-}
-
 private struct SearchTrigger: Equatable {
     let query: String
     let libraryRevision: Int
@@ -14,8 +9,8 @@ private struct SearchTrigger: Equatable {
 struct MainWindowView: View {
     let library: QuestionLibrary
     let settings: RemoteAISettings
+    let openSettings: () -> Void
 
-    @State private var page: MainPage? = .library
     @State private var query = ""
     @State private var selectedID: UUID?
     @State private var editor: QuestionEditorPresentation?
@@ -31,25 +26,15 @@ struct MainWindowView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(selection: $page) {
+            List {
                 Section {
                     Label("题库", systemImage: "rectangle.stack.fill")
-                        .tag(MainPage.library)
-                }
-                Section("偏好") {
-                    Label("模型设置", systemImage: "sparkles")
-                        .tag(MainPage.settings)
                 }
             }
             .navigationTitle("Copilot Native")
             .navigationSplitViewColumnWidth(min: 185, ideal: 210, max: 250)
         } detail: {
-            if page == .settings {
-                AISettingsView(settings: settings)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                libraryPage
-            }
+            libraryPage
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -62,7 +47,6 @@ struct MainWindowView: View {
             }
             ToolbarItem(placement: .automatic) {
                 Button {
-                    page = .library
                     searchFocused = true
                 } label: {
                     Label("搜索", systemImage: "magnifyingglass")
@@ -74,7 +58,6 @@ struct MainWindowView: View {
             QuestionEditorView(presentation: presentation, library: library) { savedID in
                 query = ""
                 selectedID = savedID
-                page = .library
                 synchronizeSearch()
             }
         }
@@ -258,7 +241,7 @@ struct MainWindowView: View {
                 case .needsConfiguration:
                     VStack(alignment: .leading, spacing: 10) {
                         Text("请先配置远程模型").foregroundStyle(.secondary)
-                        Button("打开模型设置") { page = .settings }
+                        Button("打开模型设置") { openSettings() }
                     }
                 case .failed(let message):
                     VStack(alignment: .leading, spacing: 10) {

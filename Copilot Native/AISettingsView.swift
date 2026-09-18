@@ -6,37 +6,48 @@ struct AISettingsView: View {
     @State private var isTesting = false
 
     var body: some View {
-        Form {
-            Section("远程模型") {
+        PreferencesForm {
+            PreferencesSectionHeader(title: "远程模型")
+
+            PreferencesRow(label: "接口地址") {
                 TextField("接口地址", text: $settings.endpointText)
-                    .textContentType(.URL)
-                TextField("模型名称", text: $settings.modelText)
-                SecureField("API Key", text: $settings.apiKey)
-                Text("本地无匹配时，问题会自动发送到此 HTTPS 接口，请填写兼容 OpenAI Chat Completions 的完整地址")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
-            Section {
-                HStack(spacing: 12) {
-                    Button("保存设置") { save() }
-                        .buttonStyle(.borderedProminent)
-                    Button(isTesting ? "测试中…" : "测试连接") { testConnection() }
-                        .disabled(isTesting)
-                    if isTesting { ProgressView().controlSize(.small) }
-                }
-                if let feedback {
-                    Text(feedback).foregroundStyle(feedback == "连接成功" ? Color.secondary : Color.red)
-                }
-                if let errorMessage = settings.errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
+            PreferencesRow(label: "模型名称") {
+                TextField("模型名称", text: $settings.modelText)
+            }
+
+            PreferencesRow(label: "API Key", alignment: .firstTextBaseline) {
+                SecureField("API Key", text: $settings.apiKey)
+            }
+
+            PreferencesRowCaption(
+                "本地无匹配时，问题会自动发送到此 HTTPS 接口，请填写兼容 OpenAI Chat Completions 的完整地址"
+            )
+
+            HStack(spacing: 12) {
+                Button("保存设置") { save() }
+                    .buttonStyle(.borderedProminent)
+                Button(isTesting ? "测试中…" : "测试连接") { testConnection() }
+                    .disabled(isTesting)
+                if isTesting {
+                    ProgressView()
+                        .controlSize(.small)
                 }
             }
+            .padding(.leading, PreferencesMetrics.labelWidth + PreferencesMetrics.gutter)
+
+            if let feedback {
+                PreferencesRowCaption(
+                    verbatim: feedback,
+                    color: feedback == "连接成功" || feedback == "设置已保存" ? .secondary : .red
+                )
+            }
+
+            if let errorMessage = settings.errorMessage {
+                PreferencesRowCaption(verbatim: errorMessage, color: .red)
+            }
         }
-        .formStyle(.grouped)
-        .navigationTitle("模型设置")
-        .frame(minWidth: 500, maxWidth: 720)
-        .padding(20)
     }
 
     private func save() {

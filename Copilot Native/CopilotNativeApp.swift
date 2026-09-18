@@ -6,10 +6,12 @@ import SwiftUI
 @Observable
 final class AppBootstrap {
     let settings = RemoteAISettings()
+    let settingsWindow: AISettingsWindowController
     let library: QuestionLibrary?
     let startupError: String?
 
     init() {
+        settingsWindow = AISettingsWindowController(settings: settings)
         do {
             let container: ModelContainer
             if CommandLine.arguments.contains("-uiTesting") {
@@ -36,7 +38,11 @@ struct CopilotNativeApp: App {
     var body: some Scene {
         WindowGroup("Copilot Native") {
             if let library = bootstrap.library {
-                MainWindowView(library: library, settings: bootstrap.settings)
+                MainWindowView(
+                    library: library,
+                    settings: bootstrap.settings,
+                    openSettings: { bootstrap.settingsWindow.show() }
+                )
             } else {
                 ContentUnavailableView(
                     "无法打开题库",
@@ -47,10 +53,13 @@ struct CopilotNativeApp: App {
             }
         }
         .defaultSize(width: 1120, height: 720)
-
-        Settings {
-            AISettingsView(settings: bootstrap.settings)
-                .frame(width: 560, height: 310)
+        .commands {
+            CommandGroup(replacing: .appSettings) {
+                Button("设置…") {
+                    bootstrap.settingsWindow.show()
+                }
+                .keyboardShortcut(",")
+            }
         }
     }
 }

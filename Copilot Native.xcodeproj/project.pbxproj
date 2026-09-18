@@ -17,7 +17,10 @@
 		612E38A6C58A03CF130E1331 /* QuestionAnswer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3B6721AACC749881CA195 /* QuestionAnswer.swift */; };
 		8500BF1E3DFD59B09C197E1A /* MarkdownDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4290E605162CC48B0718377E /* MarkdownDocumentView.swift */; };
 		91D61B081E63A90B9372D733 /* CopilotNativeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B3B6700505E9603A25A90A /* CopilotNativeApp.swift */; };
+		B676D9A1A822CB14C78EC029 /* MacAppSettingsUI in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD945B9C0633DA24BA4B2B9 /* MacAppSettingsUI */; };
 		C080795A8A7BCDBD0C7366CC /* QuestionLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF0A3B573F5102C09C7E975 /* QuestionLibrary.swift */; };
+		C495566137BB4900149C3E04 /* SettingsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF5CFA8DDEAA8E4199618550 /* SettingsComponents.swift */; };
+		C4EB2286F7261A4CCD16AE8E /* AISettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81BCF873898EDCD671D10B3D /* AISettingsWindowController.swift */; };
 		CE6B5B3836EFB7334F137EBC /* Copilot.icon in Resources */ = {isa = PBXBuildFile; fileRef = 257CAD070FA31B5BB123F572 /* Copilot.icon */; };
 		DF38382C31C5E76131C05A0B /* RemoteAISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86A8C9F25BF588A7224FF3FA /* RemoteAISettings.swift */; };
 		E0D3021D068795E225EA4962 /* ChatCompletionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 326BFDE170B5192811EA6948 /* ChatCompletionClient.swift */; };
@@ -42,10 +45,12 @@
 		326BFDE170B5192811EA6948 /* ChatCompletionClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCompletionClient.swift; sourceTree = "<group>"; };
 		4290E605162CC48B0718377E /* MarkdownDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDocumentView.swift; sourceTree = "<group>"; };
 		5F3D5E174F291412F09AB259 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
+		81BCF873898EDCD671D10B3D /* AISettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsWindowController.swift; sourceTree = "<group>"; };
 		86680FD5E84560B8C2549A49 /* CopilotNativeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CopilotNativeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		86A8C9F25BF588A7224FF3FA /* RemoteAISettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAISettings.swift; sourceTree = "<group>"; };
 		9E3CA4F9A41991DC23271518 /* ChatCompletionClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCompletionClientTests.swift; sourceTree = "<group>"; };
 		C6F62273FCF4B5E089F10A8E /* QuestionSearchIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionSearchIndex.swift; sourceTree = "<group>"; };
+		CF5CFA8DDEAA8E4199618550 /* SettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsComponents.swift; sourceTree = "<group>"; };
 		D0B3B6700505E9603A25A90A /* CopilotNativeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotNativeApp.swift; sourceTree = "<group>"; };
 		D2B07652DABC860A46B75F37 /* SearchAndStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchAndStorageTests.swift; sourceTree = "<group>"; };
 		E058D497B712EAA32CA35334 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
@@ -53,6 +58,17 @@
 		F2A0AA1786D797B0D4CB05E3 /* AIAnswerControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAnswerControllerTests.swift; sourceTree = "<group>"; };
 		FE33BA4940782474F008C06E /* AIAnswerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAnswerController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F5563BC6BA9D44543946CCE9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B676D9A1A822CB14C78EC029 /* MacAppSettingsUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		0799A00DAC911DC00F0789A5 = {
@@ -73,6 +89,15 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		B9B8FBB2AF3DEBCDDB329E9D /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				81BCF873898EDCD671D10B3D /* AISettingsWindowController.swift */,
+				CF5CFA8DDEAA8E4199618550 /* SettingsComponents.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
 		C35C9310D22815EDA64BF23A /* Copilot Native */ = {
 			isa = PBXGroup;
 			children = (
@@ -88,6 +113,7 @@
 				2CF0A3B573F5102C09C7E975 /* QuestionLibrary.swift */,
 				C6F62273FCF4B5E089F10A8E /* QuestionSearchIndex.swift */,
 				86A8C9F25BF588A7224FF3FA /* RemoteAISettings.swift */,
+				B9B8FBB2AF3DEBCDDB329E9D /* Settings */,
 			);
 			path = "Copilot Native";
 			sourceTree = "<group>";
@@ -129,6 +155,7 @@
 			buildPhases = (
 				37091DE40BF1F5F4F2CB2581 /* Sources */,
 				5E6B6B9078B7236ED48431CA /* Resources */,
+				F5563BC6BA9D44543946CCE9 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -136,6 +163,7 @@
 			);
 			name = "Copilot Native";
 			packageProductDependencies = (
+				0AD945B9C0633DA24BA4B2B9 /* MacAppSettingsUI */,
 			);
 			productName = "Copilot Native";
 			productReference = E42F89AC1C9E5097FF01FB4A /* Copilot Native.app */;
@@ -167,6 +195,9 @@
 			);
 			mainGroup = 0799A00DAC911DC00F0789A5;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				81249EA0D81ECA0BC8D07BDA /* XCRemoteSwiftPackageReference "MacAppSettingsUI" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A131DEA717B7A5E9434F6D9E /* Products */;
 			projectDirPath = "";
@@ -206,6 +237,7 @@
 			files = (
 				14EA86842767CB9121C3565D /* AIAnswerController.swift in Sources */,
 				0D721E8E6BBE2EA8F24D1E0E /* AISettingsView.swift in Sources */,
+				C4EB2286F7261A4CCD16AE8E /* AISettingsWindowController.swift in Sources */,
 				E0D3021D068795E225EA4962 /* ChatCompletionClient.swift in Sources */,
 				91D61B081E63A90B9372D733 /* CopilotNativeApp.swift in Sources */,
 				1093054EAE2C0165F089AB84 /* MainWindowView.swift in Sources */,
@@ -215,6 +247,7 @@
 				C080795A8A7BCDBD0C7366CC /* QuestionLibrary.swift in Sources */,
 				5AFC2C50FA3F536CF03A0304 /* QuestionSearchIndex.swift in Sources */,
 				DF38382C31C5E76131C05A0B /* RemoteAISettings.swift in Sources */,
+				C495566137BB4900149C3E04 /* SettingsComponents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -457,6 +490,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		81249EA0D81ECA0BC8D07BDA /* XCRemoteSwiftPackageReference "MacAppSettingsUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/usagimaru/MacAppSettingsUI";
+			requirement = {
+				kind = exactVersion;
+				version = 1.4.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0AD945B9C0633DA24BA4B2B9 /* MacAppSettingsUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 81249EA0D81ECA0BC8D07BDA /* XCRemoteSwiftPackageReference "MacAppSettingsUI" */;
+			productName = MacAppSettingsUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4E4F3E86EF61F5ABB5A7151F /* Project object */;
 }

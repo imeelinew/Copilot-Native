@@ -9,6 +9,10 @@ settings:
     SWIFT_STRICT_CONCURRENCY: complete
     MACOSX_DEPLOYMENT_TARGET: "26.0"
     CODE_SIGN_STYLE: Automatic
+packages:
+  MacAppSettingsUI:
+    url: https://github.com/usagimaru/MacAppSettingsUI
+    exactVersion: 1.4.0
 targets:
   Copilot Native:
     type: application
@@ -24,6 +28,8 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.education
         ASSETCATALOG_COMPILER_APPICON_NAME: Copilot
         SWIFT_EMIT_LOC_STRINGS: YES
+    dependencies:
+      - package: MacAppSettingsUI
   CopilotNativeTests:
     type: bundle.unit-test
     platform: macOS
