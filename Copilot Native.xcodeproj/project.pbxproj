@@ -1,0 +1,462 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0B24F8D7E3C993B69E600950 /* ChatCompletionClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3CA4F9A41991DC23271518 /* ChatCompletionClientTests.swift */; };
+		0D721E8E6BBE2EA8F24D1E0E /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E058D497B712EAA32CA35334 /* AISettingsView.swift */; };
+		1093054EAE2C0165F089AB84 /* MainWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F3D5E174F291412F09AB259 /* MainWindowView.swift */; };
+		14EA86842767CB9121C3565D /* AIAnswerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE33BA4940782474F008C06E /* AIAnswerController.swift */; };
+		173FCAE2D1B3CDFE81F7ADA8 /* QuestionEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020DA8199C46845EDE8EAF42 /* QuestionEditorView.swift */; };
+		473823ECACC0EE99CA48B8B5 /* AIAnswerControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A0AA1786D797B0D4CB05E3 /* AIAnswerControllerTests.swift */; };
+		5AFC2C50FA3F536CF03A0304 /* QuestionSearchIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F62273FCF4B5E089F10A8E /* QuestionSearchIndex.swift */; };
+		612E38A6C58A03CF130E1331 /* QuestionAnswer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3B6721AACC749881CA195 /* QuestionAnswer.swift */; };
+		8500BF1E3DFD59B09C197E1A /* MarkdownDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4290E605162CC48B0718377E /* MarkdownDocumentView.swift */; };
+		91D61B081E63A90B9372D733 /* CopilotNativeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B3B6700505E9603A25A90A /* CopilotNativeApp.swift */; };
+		C080795A8A7BCDBD0C7366CC /* QuestionLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF0A3B573F5102C09C7E975 /* QuestionLibrary.swift */; };
+		CE6B5B3836EFB7334F137EBC /* Copilot.icon in Resources */ = {isa = PBXBuildFile; fileRef = 257CAD070FA31B5BB123F572 /* Copilot.icon */; };
+		DF38382C31C5E76131C05A0B /* RemoteAISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86A8C9F25BF588A7224FF3FA /* RemoteAISettings.swift */; };
+		E0D3021D068795E225EA4962 /* ChatCompletionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 326BFDE170B5192811EA6948 /* ChatCompletionClient.swift */; };
+		F93CD518C36C7ED8CE511EDC /* SearchAndStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B07652DABC860A46B75F37 /* SearchAndStorageTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		CFB9CA038192389B92B76219 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4E4F3E86EF61F5ABB5A7151F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E3A2C1441C23D6705411E770;
+			remoteInfo = "Copilot Native";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		020DA8199C46845EDE8EAF42 /* QuestionEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionEditorView.swift; sourceTree = "<group>"; };
+		0BB3B6721AACC749881CA195 /* QuestionAnswer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionAnswer.swift; sourceTree = "<group>"; };
+		257CAD070FA31B5BB123F572 /* Copilot.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = Copilot.icon; sourceTree = "<group>"; };
+		2CF0A3B573F5102C09C7E975 /* QuestionLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionLibrary.swift; sourceTree = "<group>"; };
+		326BFDE170B5192811EA6948 /* ChatCompletionClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCompletionClient.swift; sourceTree = "<group>"; };
+		4290E605162CC48B0718377E /* MarkdownDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDocumentView.swift; sourceTree = "<group>"; };
+		5F3D5E174F291412F09AB259 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
+		86680FD5E84560B8C2549A49 /* CopilotNativeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CopilotNativeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		86A8C9F25BF588A7224FF3FA /* RemoteAISettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAISettings.swift; sourceTree = "<group>"; };
+		9E3CA4F9A41991DC23271518 /* ChatCompletionClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCompletionClientTests.swift; sourceTree = "<group>"; };
+		C6F62273FCF4B5E089F10A8E /* QuestionSearchIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionSearchIndex.swift; sourceTree = "<group>"; };
+		D0B3B6700505E9603A25A90A /* CopilotNativeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotNativeApp.swift; sourceTree = "<group>"; };
+		D2B07652DABC860A46B75F37 /* SearchAndStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchAndStorageTests.swift; sourceTree = "<group>"; };
+		E058D497B712EAA32CA35334 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
+		E42F89AC1C9E5097FF01FB4A /* Copilot Native.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Copilot Native.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2A0AA1786D797B0D4CB05E3 /* AIAnswerControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAnswerControllerTests.swift; sourceTree = "<group>"; };
+		FE33BA4940782474F008C06E /* AIAnswerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAnswerController.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0799A00DAC911DC00F0789A5 = {
+			isa = PBXGroup;
+			children = (
+				C35C9310D22815EDA64BF23A /* Copilot Native */,
+				CD98FA7B8726B2CF8D3CF606 /* CopilotNativeTests */,
+				A131DEA717B7A5E9434F6D9E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A131DEA717B7A5E9434F6D9E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E42F89AC1C9E5097FF01FB4A /* Copilot Native.app */,
+				86680FD5E84560B8C2549A49 /* CopilotNativeTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C35C9310D22815EDA64BF23A /* Copilot Native */ = {
+			isa = PBXGroup;
+			children = (
+				FE33BA4940782474F008C06E /* AIAnswerController.swift */,
+				E058D497B712EAA32CA35334 /* AISettingsView.swift */,
+				326BFDE170B5192811EA6948 /* ChatCompletionClient.swift */,
+				257CAD070FA31B5BB123F572 /* Copilot.icon */,
+				D0B3B6700505E9603A25A90A /* CopilotNativeApp.swift */,
+				5F3D5E174F291412F09AB259 /* MainWindowView.swift */,
+				4290E605162CC48B0718377E /* MarkdownDocumentView.swift */,
+				0BB3B6721AACC749881CA195 /* QuestionAnswer.swift */,
+				020DA8199C46845EDE8EAF42 /* QuestionEditorView.swift */,
+				2CF0A3B573F5102C09C7E975 /* QuestionLibrary.swift */,
+				C6F62273FCF4B5E089F10A8E /* QuestionSearchIndex.swift */,
+				86A8C9F25BF588A7224FF3FA /* RemoteAISettings.swift */,
+			);
+			path = "Copilot Native";
+			sourceTree = "<group>";
+		};
+		CD98FA7B8726B2CF8D3CF606 /* CopilotNativeTests */ = {
+			isa = PBXGroup;
+			children = (
+				F2A0AA1786D797B0D4CB05E3 /* AIAnswerControllerTests.swift */,
+				9E3CA4F9A41991DC23271518 /* ChatCompletionClientTests.swift */,
+				D2B07652DABC860A46B75F37 /* SearchAndStorageTests.swift */,
+			);
+			path = CopilotNativeTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		239B48FAD1949862060E152A /* CopilotNativeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F8C0C3FC94A0E244F1AC7603 /* Build configuration list for PBXNativeTarget "CopilotNativeTests" */;
+			buildPhases = (
+				017BB3831D48D8E7CC0207D7 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				19FE08D8FDDD2A8E61C0DED0 /* PBXTargetDependency */,
+			);
+			name = CopilotNativeTests;
+			packageProductDependencies = (
+			);
+			productName = CopilotNativeTests;
+			productReference = 86680FD5E84560B8C2549A49 /* CopilotNativeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E3A2C1441C23D6705411E770 /* Copilot Native */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D44F5B2CDFF499FFA4626A66 /* Build configuration list for PBXNativeTarget "Copilot Native" */;
+			buildPhases = (
+				37091DE40BF1F5F4F2CB2581 /* Sources */,
+				5E6B6B9078B7236ED48431CA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Copilot Native";
+			packageProductDependencies = (
+			);
+			productName = "Copilot Native";
+			productReference = E42F89AC1C9E5097FF01FB4A /* Copilot Native.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4E4F3E86EF61F5ABB5A7151F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					239B48FAD1949862060E152A = {
+						ProvisioningStyle = Automatic;
+					};
+					E3A2C1441C23D6705411E770 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 7928B3ED6362A8C11046EDBC /* Build configuration list for PBXProject "Copilot Native" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 0799A00DAC911DC00F0789A5;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A131DEA717B7A5E9434F6D9E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E3A2C1441C23D6705411E770 /* Copilot Native */,
+				239B48FAD1949862060E152A /* CopilotNativeTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		5E6B6B9078B7236ED48431CA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE6B5B3836EFB7334F137EBC /* Copilot.icon in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		017BB3831D48D8E7CC0207D7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				473823ECACC0EE99CA48B8B5 /* AIAnswerControllerTests.swift in Sources */,
+				0B24F8D7E3C993B69E600950 /* ChatCompletionClientTests.swift in Sources */,
+				F93CD518C36C7ED8CE511EDC /* SearchAndStorageTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		37091DE40BF1F5F4F2CB2581 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				14EA86842767CB9121C3565D /* AIAnswerController.swift in Sources */,
+				0D721E8E6BBE2EA8F24D1E0E /* AISettingsView.swift in Sources */,
+				E0D3021D068795E225EA4962 /* ChatCompletionClient.swift in Sources */,
+				91D61B081E63A90B9372D733 /* CopilotNativeApp.swift in Sources */,
+				1093054EAE2C0165F089AB84 /* MainWindowView.swift in Sources */,
+				8500BF1E3DFD59B09C197E1A /* MarkdownDocumentView.swift in Sources */,
+				612E38A6C58A03CF130E1331 /* QuestionAnswer.swift in Sources */,
+				173FCAE2D1B3CDFE81F7ADA8 /* QuestionEditorView.swift in Sources */,
+				C080795A8A7BCDBD0C7366CC /* QuestionLibrary.swift in Sources */,
+				5AFC2C50FA3F536CF03A0304 /* QuestionSearchIndex.swift in Sources */,
+				DF38382C31C5E76131C05A0B /* RemoteAISettings.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		19FE08D8FDDD2A8E61C0DED0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E3A2C1441C23D6705411E770 /* Copilot Native */;
+			targetProxy = CFB9CA038192389B92B76219 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		401A127585D22DF6310BA348 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		9A14E3DF39B2BAD18ABEDA30 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNativeTests;
+				PRODUCT_MODULE_NAME = CopilotNativeTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Copilot Native.app/Contents/MacOS/Copilot Native";
+			};
+			name = Release;
+		};
+		A24E02F85BABC8DEB5FD6FF2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		BC31F29CBB485BEC0A2C4B18 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNativeTests;
+				PRODUCT_MODULE_NAME = CopilotNativeTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Copilot Native.app/Contents/MacOS/Copilot Native";
+			};
+			name = Debug;
+		};
+		D5EEF9D6D4E505D3C603361A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = Copilot;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Copilot Native";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNative;
+				PRODUCT_MODULE_NAME = CopilotNative;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
+		E19DFE5F809C06D2C61C168E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = Copilot;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Copilot Native";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNative;
+				PRODUCT_MODULE_NAME = CopilotNative;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7928B3ED6362A8C11046EDBC /* Build configuration list for PBXProject "Copilot Native" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				401A127585D22DF6310BA348 /* Debug */,
+				A24E02F85BABC8DEB5FD6FF2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D44F5B2CDFF499FFA4626A66 /* Build configuration list for PBXNativeTarget "Copilot Native" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E19DFE5F809C06D2C61C168E /* Debug */,
+				D5EEF9D6D4E505D3C603361A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F8C0C3FC94A0E244F1AC7603 /* Build configuration list for PBXNativeTarget "CopilotNativeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BC31F29CBB485BEC0A2C4B18 /* Debug */,
+				9A14E3DF39B2BAD18ABEDA30 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4E4F3E86EF61F5ABB5A7151F /* Project object */;
+}

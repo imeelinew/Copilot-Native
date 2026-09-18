@@ -1,0 +1,46 @@
+name: Copilot Native
+options:
+  bundleIdPrefix: com.eli
+  deploymentTarget:
+    macOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    CODE_SIGN_STYLE: Automatic
+targets:
+  Copilot Native:
+    type: application
+    platform: macOS
+    sources:
+      - path: Copilot Native
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.eli.CopilotNative
+        PRODUCT_MODULE_NAME: CopilotNative
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Copilot Native
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.education
+        ASSETCATALOG_COMPILER_APPICON_NAME: Copilot
+        SWIFT_EMIT_LOC_STRINGS: YES
+  CopilotNativeTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: CopilotNativeTests
+    dependencies:
+      - target: Copilot Native
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.eli.CopilotNativeTests
+        PRODUCT_MODULE_NAME: CopilotNativeTests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Copilot Native:
+    build:
+      targets:
+        Copilot Native: all
+    test:
+      targets:
+        - CopilotNativeTests
