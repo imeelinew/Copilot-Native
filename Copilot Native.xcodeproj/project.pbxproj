@@ -15,6 +15,7 @@
 		473823ECACC0EE99CA48B8B5 /* AIAnswerControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A0AA1786D797B0D4CB05E3 /* AIAnswerControllerTests.swift */; };
 		5AFC2C50FA3F536CF03A0304 /* QuestionSearchIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F62273FCF4B5E089F10A8E /* QuestionSearchIndex.swift */; };
 		612E38A6C58A03CF130E1331 /* QuestionAnswer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3B6721AACC749881CA195 /* QuestionAnswer.swift */; };
+		6A1B8F9A6B172C2B388E6166 /* PaddedTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9BC3C9663DC64CE9678855 /* PaddedTextEditor.swift */; };
 		8500BF1E3DFD59B09C197E1A /* MarkdownDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4290E605162CC48B0718377E /* MarkdownDocumentView.swift */; };
 		91D61B081E63A90B9372D733 /* CopilotNativeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B3B6700505E9603A25A90A /* CopilotNativeApp.swift */; };
 		B676D9A1A822CB14C78EC029 /* MacAppSettingsUI in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD945B9C0633DA24BA4B2B9 /* MacAppSettingsUI */; };
@@ -44,6 +45,7 @@
 		2CF0A3B573F5102C09C7E975 /* QuestionLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionLibrary.swift; sourceTree = "<group>"; };
 		326BFDE170B5192811EA6948 /* ChatCompletionClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCompletionClient.swift; sourceTree = "<group>"; };
 		4290E605162CC48B0718377E /* MarkdownDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDocumentView.swift; sourceTree = "<group>"; };
+		4B9BC3C9663DC64CE9678855 /* PaddedTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaddedTextEditor.swift; sourceTree = "<group>"; };
 		5F3D5E174F291412F09AB259 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
 		81BCF873898EDCD671D10B3D /* AISettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsWindowController.swift; sourceTree = "<group>"; };
 		86680FD5E84560B8C2549A49 /* CopilotNativeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CopilotNativeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -108,6 +110,7 @@
 				D0B3B6700505E9603A25A90A /* CopilotNativeApp.swift */,
 				5F3D5E174F291412F09AB259 /* MainWindowView.swift */,
 				4290E605162CC48B0718377E /* MarkdownDocumentView.swift */,
+				4B9BC3C9663DC64CE9678855 /* PaddedTextEditor.swift */,
 				0BB3B6721AACC749881CA195 /* QuestionAnswer.swift */,
 				020DA8199C46845EDE8EAF42 /* QuestionEditorView.swift */,
 				2CF0A3B573F5102C09C7E975 /* QuestionLibrary.swift */,
@@ -242,6 +245,7 @@
 				91D61B081E63A90B9372D733 /* CopilotNativeApp.swift in Sources */,
 				1093054EAE2C0165F089AB84 /* MainWindowView.swift in Sources */,
 				8500BF1E3DFD59B09C197E1A /* MarkdownDocumentView.swift in Sources */,
+				6A1B8F9A6B172C2B388E6166 /* PaddedTextEditor.swift in Sources */,
 				612E38A6C58A03CF130E1331 /* QuestionAnswer.swift in Sources */,
 				173FCAE2D1B3CDFE81F7ADA8 /* QuestionEditorView.swift in Sources */,
 				C080795A8A7BCDBD0C7366CC /* QuestionLibrary.swift in Sources */,

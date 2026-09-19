@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct QuestionEditorPresentation: Identifiable {
@@ -36,42 +37,26 @@ struct QuestionEditorView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("问题").font(.headline)
-                ZStack(alignment: .topLeading) {
-                    if question.isEmpty {
-                        Text("输入面试问题")
-                            .foregroundStyle(.tertiary)
-                            .padding(.top, 8)
-                            .padding(.leading, 5)
-                            .allowsHitTesting(false)
-                    }
-                    TextEditor(text: $question)
-                        .font(.body)
-                        .scrollContentBackground(.hidden)
-                        .accessibilityLabel("问题")
-                }
+                PaddedTextEditor(
+                    text: $question,
+                    placeholder: "输入面试问题",
+                    font: .systemFont(ofSize: NSFont.systemFontSize),
+                    accessibilityLabel: "问题"
+                )
                 .frame(minHeight: 80, maxHeight: 120)
-                .padding(8)
                 .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 10))
                 .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color.primary.opacity(0.1)) }
             }
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("答案").font(.headline)
-                ZStack(alignment: .topLeading) {
-                    if answer.isEmpty {
-                        Text("输入答案，可使用 Markdown 列表和代码块")
-                            .foregroundStyle(.tertiary)
-                            .padding(.top, 8)
-                            .padding(.leading, 5)
-                            .allowsHitTesting(false)
-                    }
-                    TextEditor(text: $answer)
-                        .font(.system(.body, design: .monospaced))
-                        .scrollContentBackground(.hidden)
-                        .accessibilityLabel("答案")
-                }
+                PaddedTextEditor(
+                    text: $answer,
+                    placeholder: "输入答案，可使用 Markdown 列表和代码块",
+                    font: .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
+                    accessibilityLabel: "答案"
+                )
                 .frame(minHeight: 250)
-                .padding(8)
                 .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 10))
                 .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color.primary.opacity(0.1)) }
             }
