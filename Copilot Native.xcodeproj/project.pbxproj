@@ -27,16 +27,6 @@
 		E0D3021D068795E225EA4962 /* ChatCompletionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 326BFDE170B5192811EA6948 /* ChatCompletionClient.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		CFB9CA038192389B92B76219 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4E4F3E86EF61F5ABB5A7151F /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = E3A2C1441C23D6705411E770;
-			remoteInfo = "Copilot Native";
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
 		020DA8199C46845EDE8EAF42 /* QuestionEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionEditorView.swift; sourceTree = "<group>"; };
 		0BB3B6721AACC749881CA195 /* QuestionAnswer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionAnswer.swift; sourceTree = "<group>"; };
@@ -47,7 +37,6 @@
 		4B9BC3C9663DC64CE9678855 /* PaddedTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaddedTextEditor.swift; sourceTree = "<group>"; };
 		5F3D5E174F291412F09AB259 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
 		81BCF873898EDCD671D10B3D /* AISettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsWindowController.swift; sourceTree = "<group>"; };
-		86680FD5E84560B8C2549A49 /* CopilotNativeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CopilotNativeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		86A8C9F25BF588A7224FF3FA /* RemoteAISettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAISettings.swift; sourceTree = "<group>"; };
 		B5094B1BD4ECEAFEE99DB7D0 /* AppUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdater.swift; sourceTree = "<group>"; };
 		C6F62273FCF4B5E089F10A8E /* QuestionSearchIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionSearchIndex.swift; sourceTree = "<group>"; };
@@ -83,7 +72,6 @@
 			isa = PBXGroup;
 			children = (
 				E42F89AC1C9E5097FF01FB4A /* Copilot Native.app */,
-				86680FD5E84560B8C2549A49 /* CopilotNativeTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -122,24 +110,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		239B48FAD1949862060E152A /* CopilotNativeTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = F8C0C3FC94A0E244F1AC7603 /* Build configuration list for PBXNativeTarget "CopilotNativeTests" */;
-			buildPhases = (
-				017BB3831D48D8E7CC0207D7 /* Sources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				19FE08D8FDDD2A8E61C0DED0 /* PBXTargetDependency */,
-			);
-			name = CopilotNativeTests;
-			packageProductDependencies = (
-			);
-			productName = CopilotNativeTests;
-			productReference = 86680FD5E84560B8C2549A49 /* CopilotNativeTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 		E3A2C1441C23D6705411E770 /* Copilot Native */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D44F5B2CDFF499FFA4626A66 /* Build configuration list for PBXNativeTarget "Copilot Native" */;
@@ -170,9 +140,6 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					239B48FAD1949862060E152A = {
-						ProvisioningStyle = Automatic;
-					};
 					E3A2C1441C23D6705411E770 = {
 						ProvisioningStyle = Automatic;
 					};
@@ -197,7 +164,6 @@
 			projectRoot = "";
 			targets = (
 				E3A2C1441C23D6705411E770 /* Copilot Native */,
-				239B48FAD1949862060E152A /* CopilotNativeTests */,
 			);
 		};
 /* End PBXProject section */
@@ -214,13 +180,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		017BB3831D48D8E7CC0207D7 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		37091DE40BF1F5F4F2CB2581 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -244,14 +203,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		19FE08D8FDDD2A8E61C0DED0 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = E3A2C1441C23D6705411E770 /* Copilot Native */;
-			targetProxy = CFB9CA038192389B92B76219 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		401A127585D22DF6310BA348 /* Debug */ = {
@@ -319,24 +270,6 @@
 			};
 			name = Debug;
 		};
-		9A14E3DF39B2BAD18ABEDA30 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				COMBINE_HIDPI_IMAGES = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNativeTests;
-				PRODUCT_MODULE_NAME = CopilotNativeTests;
-				SDKROOT = macosx;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Copilot Native.app/Contents/MacOS/Copilot Native";
-			};
-			name = Release;
-		};
 		A24E02F85BABC8DEB5FD6FF2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -395,24 +328,6 @@
 			};
 			name = Release;
 		};
-		BC31F29CBB485BEC0A2C4B18 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				COMBINE_HIDPI_IMAGES = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNativeTests;
-				PRODUCT_MODULE_NAME = CopilotNativeTests;
-				SDKROOT = macosx;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Copilot Native.app/Contents/MacOS/Copilot Native";
-			};
-			name = Debug;
-		};
 		D5EEF9D6D4E505D3C603361A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -427,7 +342,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNative;
 				PRODUCT_MODULE_NAME = CopilotNative;
 				SDKROOT = macosx;
@@ -449,7 +364,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNative;
 				PRODUCT_MODULE_NAME = CopilotNative;
 				SDKROOT = macosx;
@@ -474,15 +389,6 @@
 			buildConfigurations = (
 				E19DFE5F809C06D2C61C168E /* Debug */,
 				D5EEF9D6D4E505D3C603361A /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
-		F8C0C3FC94A0E244F1AC7603 /* Build configuration list for PBXNativeTarget "CopilotNativeTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				BC31F29CBB485BEC0A2C4B18 /* Debug */,
-				9A14E3DF39B2BAD18ABEDA30 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

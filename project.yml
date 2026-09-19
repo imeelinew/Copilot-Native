@@ -42,23 +42,8 @@ targets:
     dependencies:
       - package: MacAppSettingsUI
       - package: Sparkle
-  CopilotNativeTests:
-    type: bundle.unit-test
-    platform: macOS
-    sources:
-      - path: CopilotNativeTests
-    dependencies:
-      - target: Copilot Native
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.eli.CopilotNativeTests
-        PRODUCT_MODULE_NAME: CopilotNativeTests
-        GENERATE_INFOPLIST_FILE: YES
 schemes:
   Copilot Native:
     build:
       targets:
         Copilot Native: all
-    test:
-      targets:
-        - CopilotNativeTests

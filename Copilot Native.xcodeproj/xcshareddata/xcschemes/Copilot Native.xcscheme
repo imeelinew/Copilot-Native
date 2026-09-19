@@ -37,17 +37,6 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "239B48FAD1949862060E152A"
-               BuildableName = "CopilotNativeTests.xctest"
-               BlueprintName = "CopilotNativeTests"
-               ReferencedContainer = "container:Copilot Native.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
