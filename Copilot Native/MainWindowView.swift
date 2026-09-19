@@ -199,11 +199,13 @@ struct MainWindowView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
 
-            Text(query.isEmpty ? library.title(for: selectedScope) : "搜索结果")
-                .font(.headline)
-                .padding(.horizontal, 18)
-                .padding(.top, 22)
-                .padding(.bottom, 10)
+            if !query.isEmpty {
+                Text("搜索结果")
+                    .font(.headline)
+                    .padding(.horizontal, 18)
+                    .padding(.top, 22)
+                    .padding(.bottom, 10)
+            }
 
             ScrollView {
                 LazyVStack(spacing: 9) {
@@ -227,6 +229,28 @@ struct MainWindowView: View {
                                 Label("编辑", systemImage: "pencil")
                             }
 
+                            Menu {
+                                ForEach(library.packages, id: \.id) { package in
+                                    Section(package.name) {
+                                        ForEach(library.capsules(in: package.id), id: \.id) { capsule in
+                                            Button {
+                                                moveStuff(item.id, to: capsule.id)
+                                            } label: {
+                                                Label(
+                                                    capsule.name,
+                                                    systemImage: item.capsule?.id == capsule.id
+                                                        ? "checkmark"
+                                                        : "capsule"
+                                                )
+                                            }
+                                            .disabled(item.capsule?.id == capsule.id)
+                                        }
+                                    }
+                                }
+                            } label: {
+                                Label("移动到", systemImage: "folder")
+                            }
+
                             Button(role: .destructive) {
                                 pendingDeleteID = item.id
                             } label: {
@@ -235,6 +259,7 @@ struct MainWindowView: View {
                         }
                     }
                 }
+                .padding(.top, query.isEmpty ? 16 : 0)
                 .padding(.horizontal, 14)
                 .padding(.bottom, 20)
             }
@@ -424,6 +449,15 @@ struct MainWindowView: View {
         pendingDeleteID = nil
         do {
             try library.delete(id: id)
+            synchronizeSearch()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func moveStuff(_ id: UUID, to capsuleID: UUID) {
+        do {
+            try library.move(id: id, to: capsuleID)
             synchronizeSearch()
         } catch {
             errorMessage = error.localizedDescription

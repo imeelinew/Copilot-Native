@@ -1,6 +1,5 @@
 import Foundation
 import Observation
-import Security
 
 struct AIConfiguration: Equatable, Sendable {
     let endpoint: URL
@@ -12,60 +11,29 @@ enum AISettingsError: LocalizedError {
     case incomplete
     case invalidURL
     case insecureURL
-    case keychain(OSStatus)
 
     var errorDescription: String? {
         switch self {
         case .incomplete: "请填写接口地址、模型名称和 API Key"
         case .invalidURL: "接口地址不是有效的网址"
         case .insecureURL: "远程接口必须使用 HTTPS"
-        case .keychain(let status): "无法访问钥匙串（错误码 \(status)）"
         }
     }
 }
 
 enum APIKeyStorage {
-    private static let service = "com.eli.CopilotNative.remote-api-key"
-    private static let account = "remote"
-
-    private static var query: [String: Any] {
-        [kSecClass as String: kSecClassGenericPassword,
-         kSecAttrService as String: service,
-         kSecAttrAccount as String: account]
-    }
+    private static let key = "remoteAIApiKey"
 
     static func read() throws -> String {
-        var request = query
-        request[kSecReturnData as String] = true
-        request[kSecMatchLimit as String] = kSecMatchLimitOne
-        var result: CFTypeRef?
-        let status = SecItemCopyMatching(request as CFDictionary, &result)
-        if status == errSecItemNotFound { return "" }
-        guard status == errSecSuccess, let data = result as? Data,
-              let key = String(data: data, encoding: .utf8) else {
-            throw AISettingsError.keychain(status)
-        }
-        return key
+        UserDefaults.standard.string(forKey: key) ?? ""
     }
 
     static func write(_ key: String) throws {
         let value = key.trimmingCharacters(in: .whitespacesAndNewlines)
         if value.isEmpty {
-            let status = SecItemDelete(query as CFDictionary)
-            guard status == errSecSuccess || status == errSecItemNotFound else {
-                throw AISettingsError.keychain(status)
-            }
-            return
-        }
-        let attributes: [String: Any] = [kSecValueData as String: Data(value.utf8)]
-        if SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess {
-            let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-            guard status == errSecSuccess else { throw AISettingsError.keychain(status) }
+            UserDefaults.standard.removeObject(forKey: Self.key)
         } else {
-            var request = query
-            request.merge(attributes) { _, new in new }
-            let status = SecItemAdd(request as CFDictionary, nil)
-            guard status == errSecSuccess else { throw AISettingsError.keychain(status) }
+            UserDefaults.standard.set(value, forKey: Self.key)
         }
     }
 }

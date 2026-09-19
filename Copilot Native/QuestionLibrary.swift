@@ -181,6 +181,21 @@ final class QuestionLibrary {
         try saveAndReload()
     }
 
+    func move(id: UUID, to capsuleID: UUID) throws {
+        guard let item = item(id: id) else { throw LibraryError.missingItem }
+        guard let capsule = capsule(id: capsuleID) else { throw LibraryError.missingCapsule }
+        guard item.capsule?.id != capsuleID else { return }
+
+        let previousCapsule = item.capsule
+        item.capsule = capsule
+        item.updatedAt = .now
+        previousCapsule?.updatedAt = .now
+        previousCapsule?.package?.updatedAt = .now
+        capsule.updatedAt = .now
+        capsule.package?.updatedAt = .now
+        try saveAndReload()
+    }
+
     func delete(id: UUID) throws {
         guard let item = item(id: id) else { throw LibraryError.missingItem }
         let capsule = item.capsule
