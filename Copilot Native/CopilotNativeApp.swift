@@ -16,11 +16,15 @@ final class AppBootstrap {
             let container: ModelContainer
             if CommandLine.arguments.contains("-uiTesting") {
                 container = try ModelContainer(
-                    for: QuestionAnswer.self,
+                    for: QuestionAnswer.self, InterviewPackage.self, InterviewCapsule.self,
                     configurations: ModelConfiguration(isStoredInMemoryOnly: true)
                 )
             } else {
-                container = try ModelContainer(for: QuestionAnswer.self)
+                container = try ModelContainer(
+                    for: QuestionAnswer.self,
+                    InterviewPackage.self,
+                    InterviewCapsule.self
+                )
             }
             library = try QuestionLibrary(container: container)
             startupError = nil
@@ -34,6 +38,7 @@ final class AppBootstrap {
 @main
 struct CopilotNativeApp: App {
     @State private var bootstrap = AppBootstrap()
+    @State private var updater = AppUpdater()
 
     var body: some Scene {
         WindowGroup("Copilot Native") {
@@ -65,6 +70,9 @@ struct CopilotNativeApp: App {
                     bootstrap.settingsWindow.show()
                 }
                 .keyboardShortcut(",")
+            }
+            CommandGroup(after: .appSettings) {
+                CheckForUpdatesView(updater: updater)
             }
         }
     }

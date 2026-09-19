@@ -1,5 +1,5 @@
 {
-  "originHash" : "01843805c9ebb0142697dbeda7c9aae1b6818499b8584edc839ad777198e88ba",
+  "originHash" : "33f35075fca6715586add7786286c7b79f8986cbe8624e53761dde7bdcacb442",
   "pins" : [
     {
       "identity" : "macappsettingsui",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "86428fb3d6e5c4f0e05e5f4f4a8474bb13924459",
         "version" : "1.4.0"
+      }
+    },
+    {
+      "identity" : "sparkle",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sparkle-project/Sparkle",
+      "state" : {
+        "revision" : "eef1a539a373c1f1a320624b1130fc5de7b2e100",
+        "version" : "2.10.0"
       }
     }
   ],

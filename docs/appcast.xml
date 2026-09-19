@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Copilot Native</title>
+        <link>https://imeelinew.github.io/Copilot-Native/appcast.xml</link>
+        <description>Most recent changes to Copilot Native</description>
+        <language>zh-CN</language>
+    </channel>
+</rss>

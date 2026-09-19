@@ -16,6 +16,7 @@
 		5AFC2C50FA3F536CF03A0304 /* QuestionSearchIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F62273FCF4B5E089F10A8E /* QuestionSearchIndex.swift */; };
 		612E38A6C58A03CF130E1331 /* QuestionAnswer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3B6721AACC749881CA195 /* QuestionAnswer.swift */; };
 		6A1B8F9A6B172C2B388E6166 /* PaddedTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9BC3C9663DC64CE9678855 /* PaddedTextEditor.swift */; };
+		6FCB6726F19556911F469EDB /* AppUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5094B1BD4ECEAFEE99DB7D0 /* AppUpdater.swift */; };
 		8500BF1E3DFD59B09C197E1A /* MarkdownDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4290E605162CC48B0718377E /* MarkdownDocumentView.swift */; };
 		91D61B081E63A90B9372D733 /* CopilotNativeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B3B6700505E9603A25A90A /* CopilotNativeApp.swift */; };
 		B676D9A1A822CB14C78EC029 /* MacAppSettingsUI in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD945B9C0633DA24BA4B2B9 /* MacAppSettingsUI */; };
@@ -24,6 +25,7 @@
 		C4EB2286F7261A4CCD16AE8E /* AISettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81BCF873898EDCD671D10B3D /* AISettingsWindowController.swift */; };
 		CE6B5B3836EFB7334F137EBC /* Copilot.icon in Resources */ = {isa = PBXBuildFile; fileRef = 257CAD070FA31B5BB123F572 /* Copilot.icon */; };
 		DF38382C31C5E76131C05A0B /* RemoteAISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86A8C9F25BF588A7224FF3FA /* RemoteAISettings.swift */; };
+		DFD1828BB0EB41A5C704A472 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 246D8A5F1D2625CCB2EFC3F5 /* Sparkle */; };
 		E0D3021D068795E225EA4962 /* ChatCompletionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 326BFDE170B5192811EA6948 /* ChatCompletionClient.swift */; };
 		F93CD518C36C7ED8CE511EDC /* SearchAndStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B07652DABC860A46B75F37 /* SearchAndStorageTests.swift */; };
 /* End PBXBuildFile section */
@@ -51,6 +53,7 @@
 		86680FD5E84560B8C2549A49 /* CopilotNativeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CopilotNativeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		86A8C9F25BF588A7224FF3FA /* RemoteAISettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAISettings.swift; sourceTree = "<group>"; };
 		9E3CA4F9A41991DC23271518 /* ChatCompletionClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCompletionClientTests.swift; sourceTree = "<group>"; };
+		B5094B1BD4ECEAFEE99DB7D0 /* AppUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdater.swift; sourceTree = "<group>"; };
 		C6F62273FCF4B5E089F10A8E /* QuestionSearchIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionSearchIndex.swift; sourceTree = "<group>"; };
 		CF5CFA8DDEAA8E4199618550 /* SettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsComponents.swift; sourceTree = "<group>"; };
 		D0B3B6700505E9603A25A90A /* CopilotNativeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotNativeApp.swift; sourceTree = "<group>"; };
@@ -67,6 +70,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B676D9A1A822CB14C78EC029 /* MacAppSettingsUI in Frameworks */,
+				DFD1828BB0EB41A5C704A472 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,6 +109,7 @@
 			children = (
 				FE33BA4940782474F008C06E /* AIAnswerController.swift */,
 				E058D497B712EAA32CA35334 /* AISettingsView.swift */,
+				B5094B1BD4ECEAFEE99DB7D0 /* AppUpdater.swift */,
 				326BFDE170B5192811EA6948 /* ChatCompletionClient.swift */,
 				257CAD070FA31B5BB123F572 /* Copilot.icon */,
 				D0B3B6700505E9603A25A90A /* CopilotNativeApp.swift */,
@@ -167,6 +172,7 @@
 			name = "Copilot Native";
 			packageProductDependencies = (
 				0AD945B9C0633DA24BA4B2B9 /* MacAppSettingsUI */,
+				246D8A5F1D2625CCB2EFC3F5 /* Sparkle */,
 			);
 			productName = "Copilot Native";
 			productReference = E42F89AC1C9E5097FF01FB4A /* Copilot Native.app */;
@@ -200,6 +206,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				81249EA0D81ECA0BC8D07BDA /* XCRemoteSwiftPackageReference "MacAppSettingsUI" */,
+				0B97E44524B7B7CCAD159702 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A131DEA717B7A5E9434F6D9E /* Products */;
@@ -241,6 +248,7 @@
 				14EA86842767CB9121C3565D /* AIAnswerController.swift in Sources */,
 				0D721E8E6BBE2EA8F24D1E0E /* AISettingsView.swift in Sources */,
 				C4EB2286F7261A4CCD16AE8E /* AISettingsWindowController.swift in Sources */,
+				6FCB6726F19556911F469EDB /* AppUpdater.swift in Sources */,
 				E0D3021D068795E225EA4962 /* ChatCompletionClient.swift in Sources */,
 				91D61B081E63A90B9372D733 /* CopilotNativeApp.swift in Sources */,
 				1093054EAE2C0165F089AB84 /* MainWindowView.swift in Sources */,
@@ -430,13 +438,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = Copilot;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Support/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Copilot Native";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNative;
 				PRODUCT_MODULE_NAME = CopilotNative;
 				SDKROOT = macosx;
@@ -449,13 +460,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = Copilot;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Support/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Copilot Native";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNative;
 				PRODUCT_MODULE_NAME = CopilotNative;
 				SDKROOT = macosx;
@@ -496,6 +510,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		0B97E44524B7B7CCAD159702 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.10.0;
+			};
+		};
 		81249EA0D81ECA0BC8D07BDA /* XCRemoteSwiftPackageReference "MacAppSettingsUI" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/usagimaru/MacAppSettingsUI";
@@ -511,6 +533,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 81249EA0D81ECA0BC8D07BDA /* XCRemoteSwiftPackageReference "MacAppSettingsUI" */;
 			productName = MacAppSettingsUI;
+		};
+		246D8A5F1D2625CCB2EFC3F5 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0B97E44524B7B7CCAD159702 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

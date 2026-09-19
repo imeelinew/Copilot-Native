@@ -13,6 +13,9 @@ packages:
   MacAppSettingsUI:
     url: https://github.com/usagimaru/MacAppSettingsUI
     exactVersion: 1.4.0
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.10.0
 targets:
   Copilot Native:
     type: application
@@ -28,8 +31,17 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.education
         ASSETCATALOG_COMPILER_APPICON_NAME: Copilot
         SWIFT_EMIT_LOC_STRINGS: YES
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+    info:
+      path: Support/Info.plist
+      properties:
+        SUFeedURL: https://imeelinew.github.io/Copilot-Native/appcast.xml
+        SUPublicEDKey: 4r6yMauRlw+aLLxSMfyZqTLD4OTPOizEzu1hKRf9wUI=
+        SUScheduledCheckInterval: 86400
     dependencies:
       - package: MacAppSettingsUI
+      - package: Sparkle
   CopilotNativeTests:
     type: bundle.unit-test
     platform: macOS

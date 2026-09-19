@@ -1,0 +1,79 @@
+name: Appcast
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: appcast
+  cancel-in-progress: false
+
+env:
+  GITHUB_REPO_NAME: imeelinew/Copilot-Native
+  SPARKLE_VERSION: "2.10.0"
+  SPARKLE_SHA256: c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c
+
+jobs:
+  appcast:
+    runs-on: macos-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download the release archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/archives"
+          gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPO_NAME" \
+            --dir "$RUNNER_TEMP/archives" \
+            --pattern '*.zip'
+          zip_count=$(find "$RUNNER_TEMP/archives" -name '*.zip' | wc -l | tr -d ' ')
+          if [[ "$zip_count" -ne 1 ]]; then
+            echo "Expected exactly one ZIP in the release, found $zip_count" >&2
+            exit 1
+          fi
+
+      - name: Download pinned Sparkle tools
+        run: |
+          curl -fL -o "$RUNNER_TEMP/sparkle.tar.xz" \
+            "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
+          echo "${SPARKLE_SHA256}  $RUNNER_TEMP/sparkle.tar.xz" | shasum -a 256 --check
+          tar -xf "$RUNNER_TEMP/sparkle.tar.xz" -C "$RUNNER_TEMP"
+
+      - name: Generate the appcast
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          work_dir="$RUNNER_TEMP/appcast"
+          mkdir -p "$work_dir"
+          cp docs/appcast.xml "$work_dir/appcast.xml"
+          mv "$RUNNER_TEMP/archives"/*.zip "$work_dir/"
+          printf '%s' "$SPARKLE_PRIVATE_KEY" | "$RUNNER_TEMP/bin/generate_appcast" \
+            --ed-key-file - \
+            --download-url-prefix "https://github.com/${GITHUB_REPO_NAME}/releases/download/${RELEASE_TAG}/" \
+            "$work_dir"
+          grep -q 'sparkle:edSignature' "$work_dir/appcast.xml" || {
+            echo "appcast is missing sparkle:edSignature" >&2
+            exit 1
+          }
+          cp "$work_dir/appcast.xml" docs/appcast.xml
+
+      - name: Commit the appcast
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/appcast.xml
+          git diff --cached --quiet && exit 0
+          git commit -m "Update appcast for ${RELEASE_TAG}"
+          git push
