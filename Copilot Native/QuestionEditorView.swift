@@ -34,7 +34,7 @@ struct QuestionEditorView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 24) {
             Text(presentation.editingID == nil ? "添加问答" : "编辑问答")
                 .font(.title2.bold())
 
@@ -89,8 +89,11 @@ struct QuestionEditorView: View {
                         || answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                         || capsuleID == nil)
             }
+            .padding(.top, 4)
         }
-        .padding(24)
+        .padding(.horizontal, 36)
+        .padding(.top, 32)
+        .padding(.bottom, 32)
         .frame(minWidth: 650, minHeight: 560)
     }
 

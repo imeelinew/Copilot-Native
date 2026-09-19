@@ -554,71 +554,23 @@ private struct LibrarySidebar: View {
     let onExportPackage: (UUID) -> Void
     let onExportCapsule: (UUID) -> Void
 
-    private var selectedPackageID: UUID? {
-        library.packageID(for: selection)
-    }
-
     var body: some View {
-        VStack(spacing: 0) {
-            AppKitLibrarySidebar(
-                library: library,
-                libraryRevision: library.revision,
-                selection: $selection,
-                expandedPackageIDs: $expandedPackageIDs,
-                onAddCapsule: onAddCapsule,
-                onRenamePackage: onRenamePackage,
-                onRenameCapsule: onRenameCapsule,
-                onDeletePackage: onDeletePackage,
-                onDeleteCapsule: onDeleteCapsule,
-                onImportCapsule: onImportCapsule,
-                onExportPackage: onExportPackage,
-                onExportCapsule: onExportCapsule
-            )
-
-            Divider()
-            HStack(spacing: 8) {
-                Menu {
-                    Button("新建 Package", systemImage: "shippingbox") { onAddPackage() }
-                    if let packageID = selectedPackageID {
-                        Button("新建 Capsule", systemImage: "capsule") { onAddCapsule(packageID) }
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                        .frame(width: 24, height: 24)
-                }
-                .menuStyle(.borderlessButton)
-                .accessibilityLabel("新建 Package 或 Capsule")
-
-                Menu {
-                    Button("导入 Package…", systemImage: "square.and.arrow.down") { onImportPackage() }
-                    if let packageID = selectedPackageID {
-                        Button("导入 Capsule…", systemImage: "square.and.arrow.down") {
-                            onImportCapsule(packageID)
-                        }
-                    }
-                    Divider()
-                    if case .package(let id) = selection {
-                        Button("导出当前 Package…", systemImage: "square.and.arrow.up") {
-                            onExportPackage(id)
-                        }
-                    }
-                    if case .capsule(let id) = selection {
-                        Button("导出当前 Capsule…", systemImage: "square.and.arrow.up") {
-                            onExportCapsule(id)
-                        }
-                    }
-                } label: {
-                    Image(systemName: "arrow.up.arrow.down")
-                        .frame(width: 24, height: 24)
-                }
-                .menuStyle(.borderlessButton)
-                .accessibilityLabel("导入或导出")
-
-                Spacer()
-            }
-            .padding(.horizontal, 10)
-            .frame(height: 42)
-        }
+        AppKitLibrarySidebar(
+            library: library,
+            libraryRevision: library.revision,
+            selection: $selection,
+            expandedPackageIDs: $expandedPackageIDs,
+            onAddPackage: onAddPackage,
+            onAddCapsule: onAddCapsule,
+            onRenamePackage: onRenamePackage,
+            onRenameCapsule: onRenameCapsule,
+            onDeletePackage: onDeletePackage,
+            onDeleteCapsule: onDeleteCapsule,
+            onImportPackage: onImportPackage,
+            onImportCapsule: onImportCapsule,
+            onExportPackage: onExportPackage,
+            onExportCapsule: onExportCapsule
+        )
         .background(Color(nsColor: .underPageBackgroundColor).opacity(0.55))
     }
 }
@@ -628,11 +580,13 @@ private struct AppKitLibrarySidebar: NSViewRepresentable {
     let libraryRevision: Int
     @Binding var selection: LibraryScope?
     @Binding var expandedPackageIDs: Set<UUID>
+    let onAddPackage: () -> Void
     let onAddCapsule: (UUID) -> Void
     let onRenamePackage: (UUID) -> Void
     let onRenameCapsule: (UUID) -> Void
     let onDeletePackage: (UUID) -> Void
     let onDeleteCapsule: (UUID) -> Void
+    let onImportPackage: () -> Void
     let onImportCapsule: (UUID) -> Void
     let onExportPackage: (UUID) -> Void
     let onExportCapsule: (UUID) -> Void
@@ -706,6 +660,9 @@ private struct AppKitLibrarySidebar: NSViewRepresentable {
             tableView.floatsGroupRows = false
             tableView.sidebarMenuProvider = { [weak self] row in
                 self?.contextMenu(for: row)
+            }
+            tableView.sidebarBackgroundMenuProvider = { [weak self] in
+                self?.backgroundContextMenu()
             }
             tableView.sidebarDisclosureHandler = { [weak self] tableView, row in
                 self?.activatePackageDisclosure(at: row, in: tableView) ?? false
@@ -931,44 +888,88 @@ private struct AppKitLibrarySidebar: NSViewRepresentable {
             let menu = NSMenu()
             var nextAction = 0
 
-            func addItem(_ title: String, symbol: String, action: @escaping @MainActor () -> Void) {
-                let key = nextAction
-                nextAction += 1
-                controller.actions[key] = action
-                let item = NSMenuItem(
-                    title: title,
-                    action: #selector(AppKitLibrarySidebarMenuController.invoke(_:)),
-                    keyEquivalent: ""
-                )
-                item.target = controller
-                item.representedObject = key
-                item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)
-                menu.addItem(item)
-            }
-
             switch items[row] {
             case .package(let id, _):
-                addItem("新建 Capsule", symbol: "plus") { [weak self] in self?.parent.onAddCapsule(id) }
-                addItem("重命名", symbol: "pencil") { [weak self] in self?.parent.onRenamePackage(id) }
-                menu.addItem(.separator())
-                addItem("导入 Capsule…", symbol: "square.and.arrow.down") { [weak self] in
-                    self?.parent.onImportCapsule(id)
+                addItem("新建 Capsule", symbol: "plus", to: menu, controller: controller, nextAction: &nextAction) {
+                    [weak self] in self?.parent.onAddCapsule(id)
                 }
-                addItem("导出 Package…", symbol: "square.and.arrow.up") { [weak self] in
-                    self?.parent.onExportPackage(id)
+                addItem("重命名", symbol: "pencil", to: menu, controller: controller, nextAction: &nextAction) {
+                    [weak self] in self?.parent.onRenamePackage(id)
                 }
                 menu.addItem(.separator())
-                addItem("删除 Package", symbol: "trash") { [weak self] in self?.parent.onDeletePackage(id) }
+                addItem("导出 Package…", symbol: "square.and.arrow.up", to: menu, controller: controller, nextAction: &nextAction) {
+                    [weak self] in self?.parent.onExportPackage(id)
+                }
+                menu.addItem(.separator())
+                addItem("删除 Package", symbol: "trash", to: menu, controller: controller, nextAction: &nextAction) {
+                    [weak self] in self?.parent.onDeletePackage(id)
+                }
             case .capsule(let id):
-                addItem("重命名", symbol: "pencil") { [weak self] in self?.parent.onRenameCapsule(id) }
-                addItem("导出 Capsule…", symbol: "square.and.arrow.up") { [weak self] in
-                    self?.parent.onExportCapsule(id)
+                addItem("重命名", symbol: "pencil", to: menu, controller: controller, nextAction: &nextAction) {
+                    [weak self] in self?.parent.onRenameCapsule(id)
+                }
+                addItem("导出 Capsule…", symbol: "square.and.arrow.up", to: menu, controller: controller, nextAction: &nextAction) {
+                    [weak self] in self?.parent.onExportCapsule(id)
                 }
                 menu.addItem(.separator())
-                addItem("删除 Capsule", symbol: "trash") { [weak self] in self?.parent.onDeleteCapsule(id) }
+                addItem("删除 Capsule", symbol: "trash", to: menu, controller: controller, nextAction: &nextAction) {
+                    [weak self] in self?.parent.onDeleteCapsule(id)
+                }
             }
             menuController = controller
             return menu
+        }
+
+        private func backgroundContextMenu() -> NSMenu? {
+            let controller = AppKitLibrarySidebarMenuController()
+            let menu = NSMenu()
+            var nextAction = 0
+            let selectedPackageID = parent.library.packageID(for: parent.selection)
+
+            addItem("新建 Package", symbol: "shippingbox", to: menu, controller: controller, nextAction: &nextAction) {
+                [weak self] in self?.parent.onAddPackage()
+            }
+            menu.addItem(.separator())
+            addItem("导入 Package…", symbol: "square.and.arrow.down", to: menu, controller: controller, nextAction: &nextAction) {
+                [weak self] in self?.parent.onImportPackage()
+            }
+            addItem(
+                "导入 Capsule…",
+                symbol: "square.and.arrow.down",
+                enabled: selectedPackageID != nil,
+                to: menu,
+                controller: controller,
+                nextAction: &nextAction
+            ) { [weak self] in
+                guard let selectedPackageID else { return }
+                self?.parent.onImportCapsule(selectedPackageID)
+            }
+            menuController = controller
+            return menu
+        }
+
+        private func addItem(
+            _ title: String,
+            symbol: String,
+            enabled: Bool = true,
+            to menu: NSMenu,
+            controller: AppKitLibrarySidebarMenuController,
+            nextAction: inout Int,
+            action: @escaping @MainActor () -> Void
+        ) {
+            let key = nextAction
+            nextAction += 1
+            controller.actions[key] = action
+            let item = NSMenuItem(
+                title: title,
+                action: #selector(AppKitLibrarySidebarMenuController.invoke(_:)),
+                keyEquivalent: ""
+            )
+            item.target = controller
+            item.representedObject = key
+            item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)
+            item.isEnabled = enabled
+            menu.addItem(item)
         }
     }
 }
@@ -995,6 +996,7 @@ private final class AppKitLibrarySidebarMenuController: NSObject {
 
 private final class AppKitLibrarySidebarTableView: NSTableView {
     var sidebarMenuProvider: ((Int) -> NSMenu?)?
+    var sidebarBackgroundMenuProvider: (() -> NSMenu?)?
     var sidebarDisclosureHandler: ((NSTableView, Int) -> Bool)?
 
     override func mouseDown(with event: NSEvent) {
@@ -1005,8 +1007,10 @@ private final class AppKitLibrarySidebarTableView: NSTableView {
 
     override func menu(for event: NSEvent) -> NSMenu? {
         let row = row(at: convert(event.locationInWindow, from: nil))
-        guard row >= 0 else { return nil }
-        return sidebarMenuProvider?(row)
+        if row >= 0 {
+            return sidebarMenuProvider?(row)
+        }
+        return sidebarBackgroundMenuProvider?()
     }
 }
 
