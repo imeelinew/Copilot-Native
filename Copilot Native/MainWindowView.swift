@@ -1,5 +1,9 @@
 import SwiftUI
 
+extension Notification.Name {
+    static let focusQuestionSearch = Notification.Name("focusQuestionSearch")
+}
+
 private struct SearchTrigger: Equatable {
     let query: String
     let libraryRevision: Int
@@ -45,14 +49,6 @@ struct MainWindowView: View {
                 }
                 .keyboardShortcut("n", modifiers: .command)
             }
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    searchFocused = true
-                } label: {
-                    Label("搜索", systemImage: "magnifyingglass")
-                }
-                .keyboardShortcut("f", modifiers: .command)
-            }
         }
         .sheet(item: $editor) { presentation in
             QuestionEditorView(presentation: presentation, library: library) { savedID in
@@ -83,6 +79,9 @@ struct MainWindowView: View {
             searchFocused = true
         }
         .onChange(of: searchTrigger) { _, _ in synchronizeSearch() }
+        .onReceive(NotificationCenter.default.publisher(for: .focusQuestionSearch)) { _ in
+            searchFocused = true
+        }
         .onDisappear { ai.cancel() }
         .frame(minWidth: 850, minHeight: 560)
     }

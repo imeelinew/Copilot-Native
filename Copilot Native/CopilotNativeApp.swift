@@ -54,6 +54,12 @@ struct CopilotNativeApp: App {
         }
         .defaultSize(width: 1120, height: 720)
         .commands {
+            CommandGroup(after: .textEditing) {
+                Button("搜索题库") {
+                    NotificationCenter.default.post(name: .focusQuestionSearch, object: nil)
+                }
+                .keyboardShortcut("f", modifiers: .command)
+            }
             CommandGroup(replacing: .appSettings) {
                 Button("设置…") {
                     bootstrap.settingsWindow.show()
