@@ -7,12 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0B24F8D7E3C993B69E600950 /* ChatCompletionClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3CA4F9A41991DC23271518 /* ChatCompletionClientTests.swift */; };
 		0D721E8E6BBE2EA8F24D1E0E /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E058D497B712EAA32CA35334 /* AISettingsView.swift */; };
 		1093054EAE2C0165F089AB84 /* MainWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F3D5E174F291412F09AB259 /* MainWindowView.swift */; };
 		14EA86842767CB9121C3565D /* AIAnswerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE33BA4940782474F008C06E /* AIAnswerController.swift */; };
 		173FCAE2D1B3CDFE81F7ADA8 /* QuestionEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020DA8199C46845EDE8EAF42 /* QuestionEditorView.swift */; };
-		473823ECACC0EE99CA48B8B5 /* AIAnswerControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A0AA1786D797B0D4CB05E3 /* AIAnswerControllerTests.swift */; };
 		5AFC2C50FA3F536CF03A0304 /* QuestionSearchIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F62273FCF4B5E089F10A8E /* QuestionSearchIndex.swift */; };
 		612E38A6C58A03CF130E1331 /* QuestionAnswer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB3B6721AACC749881CA195 /* QuestionAnswer.swift */; };
 		6A1B8F9A6B172C2B388E6166 /* PaddedTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9BC3C9663DC64CE9678855 /* PaddedTextEditor.swift */; };
@@ -27,7 +25,6 @@
 		DF38382C31C5E76131C05A0B /* RemoteAISettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86A8C9F25BF588A7224FF3FA /* RemoteAISettings.swift */; };
 		DFD1828BB0EB41A5C704A472 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 246D8A5F1D2625CCB2EFC3F5 /* Sparkle */; };
 		E0D3021D068795E225EA4962 /* ChatCompletionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 326BFDE170B5192811EA6948 /* ChatCompletionClient.swift */; };
-		F93CD518C36C7ED8CE511EDC /* SearchAndStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B07652DABC860A46B75F37 /* SearchAndStorageTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,15 +49,12 @@
 		81BCF873898EDCD671D10B3D /* AISettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsWindowController.swift; sourceTree = "<group>"; };
 		86680FD5E84560B8C2549A49 /* CopilotNativeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CopilotNativeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		86A8C9F25BF588A7224FF3FA /* RemoteAISettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAISettings.swift; sourceTree = "<group>"; };
-		9E3CA4F9A41991DC23271518 /* ChatCompletionClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCompletionClientTests.swift; sourceTree = "<group>"; };
 		B5094B1BD4ECEAFEE99DB7D0 /* AppUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdater.swift; sourceTree = "<group>"; };
 		C6F62273FCF4B5E089F10A8E /* QuestionSearchIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionSearchIndex.swift; sourceTree = "<group>"; };
 		CF5CFA8DDEAA8E4199618550 /* SettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsComponents.swift; sourceTree = "<group>"; };
 		D0B3B6700505E9603A25A90A /* CopilotNativeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotNativeApp.swift; sourceTree = "<group>"; };
-		D2B07652DABC860A46B75F37 /* SearchAndStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchAndStorageTests.swift; sourceTree = "<group>"; };
 		E058D497B712EAA32CA35334 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
 		E42F89AC1C9E5097FF01FB4A /* Copilot Native.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Copilot Native.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		F2A0AA1786D797B0D4CB05E3 /* AIAnswerControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAnswerControllerTests.swift; sourceTree = "<group>"; };
 		FE33BA4940782474F008C06E /* AIAnswerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAnswerController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -81,7 +75,6 @@
 			isa = PBXGroup;
 			children = (
 				C35C9310D22815EDA64BF23A /* Copilot Native */,
-				CD98FA7B8726B2CF8D3CF606 /* CopilotNativeTests */,
 				A131DEA717B7A5E9434F6D9E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -124,16 +117,6 @@
 				B9B8FBB2AF3DEBCDDB329E9D /* Settings */,
 			);
 			path = "Copilot Native";
-			sourceTree = "<group>";
-		};
-		CD98FA7B8726B2CF8D3CF606 /* CopilotNativeTests */ = {
-			isa = PBXGroup;
-			children = (
-				F2A0AA1786D797B0D4CB05E3 /* AIAnswerControllerTests.swift */,
-				9E3CA4F9A41991DC23271518 /* ChatCompletionClientTests.swift */,
-				D2B07652DABC860A46B75F37 /* SearchAndStorageTests.swift */,
-			);
-			path = CopilotNativeTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -235,9 +218,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				473823ECACC0EE99CA48B8B5 /* AIAnswerControllerTests.swift in Sources */,
-				0B24F8D7E3C993B69E600950 /* ChatCompletionClientTests.swift in Sources */,
-				F93CD518C36C7ED8CE511EDC /* SearchAndStorageTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -447,7 +427,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNative;
 				PRODUCT_MODULE_NAME = CopilotNative;
 				SDKROOT = macosx;
@@ -469,7 +449,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.eli.CopilotNative;
 				PRODUCT_MODULE_NAME = CopilotNative;
 				SDKROOT = macosx;
