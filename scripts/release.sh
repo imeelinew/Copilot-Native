@@ -13,7 +13,7 @@ tag="v${version}"
 script_dir="${0:A:h}"
 repo_root="${script_dir:h}"
 github_repo="${COPILOT_NATIVE_GITHUB_REPOSITORY:-imeelinew/Copilot-Native}"
-team_id="${COPILOT_NATIVE_TEAM_ID:-7558SBX9GQ}"
+team_id="${COPILOT_NATIVE_TEAM_ID:-5Q5QT76MJU}"
 work_dir=$(mktemp -d /tmp/copilot-native-release.XXXXXX)
 trap 'rm -rf "$work_dir"' EXIT
 
@@ -40,8 +40,8 @@ if gh release view "$tag" --repo "$github_repo" >/dev/null 2>&1; then
     exit 65
 fi
 
-signing_identities=$(security find-identity -v -p codesigning)
-[[ "$signing_identities" == *'Apple Development:'* ]] || {
+signing_identity=$(security find-identity -v -p codesigning | sed -n 's/.*"\(Apple Development:[^"]*\)".*/\1/p' | head -n 1)
+[[ -n "$signing_identity" ]] || {
     print -u2 "No Apple Development certificate found in the login Keychain"
     exit 66
 }
@@ -62,7 +62,8 @@ xcodebuild archive \
     -derivedDataPath "$derived_data" \
     -destination 'generic/platform=macOS' \
     DEVELOPMENT_TEAM="$team_id" \
-    CODE_SIGN_IDENTITY='Apple Development' \
+    CODE_SIGN_IDENTITY="$signing_identity" \
+    CODE_SIGN_STYLE=Manual \
     MARKETING_VERSION="$version" \
     CURRENT_PROJECT_VERSION="$build"
 
