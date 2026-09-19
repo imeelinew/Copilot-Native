@@ -6,9 +6,10 @@ struct QuestionEditorPresentation: Identifiable {
     let editingID: UUID?
     let question: String
     let answer: String
+    let capsuleID: UUID?
 
-    static func adding(question: String = "", answer: String = "") -> Self {
-        .init(editingID: nil, question: question, answer: answer)
+    static func adding(question: String = "", answer: String = "", capsuleID: UUID? = nil) -> Self {
+        .init(editingID: nil, question: question, answer: answer, capsuleID: capsuleID)
     }
 }
 
@@ -20,6 +21,7 @@ struct QuestionEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var question: String
     @State private var answer: String
+    @State private var capsuleID: UUID?
     @State private var errorMessage: String?
 
     init(presentation: QuestionEditorPresentation, library: QuestionLibrary, onSaved: @escaping (UUID) -> Void) {
@@ -28,12 +30,24 @@ struct QuestionEditorView: View {
         self.onSaved = onSaved
         _question = State(initialValue: presentation.question)
         _answer = State(initialValue: presentation.answer)
+        _capsuleID = State(initialValue: presentation.capsuleID ?? library.capsules.first?.id)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text(presentation.editingID == nil ? "添加问答" : "编辑问答")
                 .font(.title2.bold())
+
+            Picker("Capsule", selection: $capsuleID) {
+                ForEach(library.packages, id: \.id) { package in
+                    Section(package.name) {
+                        ForEach(library.capsules(in: package.id), id: \.id) { capsule in
+                            Text(capsule.name).tag(Optional(capsule.id))
+                        }
+                    }
+                }
+            }
+            .pickerStyle(.menu)
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("问题").font(.headline)
@@ -72,7 +86,8 @@ struct QuestionEditorView: View {
                 Button("保存") { save() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        || answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        || answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        || capsuleID == nil)
             }
         }
         .padding(24)
@@ -81,12 +96,13 @@ struct QuestionEditorView: View {
 
     private func save() {
         do {
+            guard let capsuleID else { throw LibraryError.missingCapsule }
             let id: UUID
             if let editingID = presentation.editingID {
-                try library.update(id: editingID, question: question, answer: answer)
+                try library.update(id: editingID, question: question, answer: answer, capsuleID: capsuleID)
                 id = editingID
             } else {
-                id = try library.add(question: question, answer: answer).id
+                id = try library.add(question: question, answer: answer, capsuleID: capsuleID).id
             }
             onSaved(id)
             dismiss()
