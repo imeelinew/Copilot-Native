@@ -140,6 +140,23 @@ struct MainWindowView: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(item.question)
+                        .contextMenu {
+                            Button {
+                                editor = .init(
+                                    editingID: item.id,
+                                    question: item.question,
+                                    answer: item.answer
+                                )
+                            } label: {
+                                Label("编辑", systemImage: "pencil")
+                            }
+
+                            Button(role: .destructive) {
+                                pendingDeleteID = item.id
+                            } label: {
+                                Label("删除", systemImage: "trash")
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal, 14)
@@ -166,24 +183,9 @@ struct MainWindowView: View {
     private func savedAnswer(_ item: QuestionAnswer) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                HStack(alignment: .top, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(item.question)
-                            .font(.title2.bold())
-                            .textSelection(.enabled)
-                    }
-                    Spacer(minLength: 0)
-                    Button {
-                        editor = .init(editingID: item.id, question: item.question, answer: item.answer)
-                    } label: {
-                        Label("编辑", systemImage: "pencil")
-                    }
-                    Button(role: .destructive) {
-                        pendingDeleteID = item.id
-                    } label: {
-                        Label("删除", systemImage: "trash")
-                    }
-                }
+                Text(item.question)
+                    .font(.title2.bold())
+                    .textSelection(.enabled)
                 Divider()
                 MarkdownDocumentView(markdown: item.answer)
             }
