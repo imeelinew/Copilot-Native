@@ -6,6 +6,7 @@ import SwiftUI
 @Observable
 final class AppBootstrap {
     let settings = RemoteAISettings()
+    let knowledge = InterviewKnowledgeBase()
     let settingsWindow: AISettingsWindowController
     let library: QuestionLibrary?
     let startupError: String?
@@ -46,6 +47,7 @@ struct CopilotNativeApp: App {
                 MainWindowView(
                     library: library,
                     settings: bootstrap.settings,
+                    knowledge: bootstrap.knowledge,
                     openSettings: { bootstrap.settingsWindow.show() }
                 )
             } else {

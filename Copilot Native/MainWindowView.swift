@@ -11,6 +11,8 @@ private struct SearchTrigger: Equatable {
     let scope: LibraryScope?
     let libraryRevision: Int
     let settingsRevision: Int
+    let knowledgeRevision: Int
+    let projectScope: InterviewProjectScope
 }
 
 private struct HierarchyNameRequest: Identifiable {
@@ -42,6 +44,7 @@ private struct HierarchyDeleteRequest: Identifiable {
 struct MainWindowView: View {
     let library: QuestionLibrary
     let settings: RemoteAISettings
+    let knowledge: InterviewKnowledgeBase
     let openSettings: () -> Void
 
     @State private var query = ""
@@ -65,7 +68,9 @@ struct MainWindowView: View {
             query: query,
             scope: selectedScope,
             libraryRevision: library.revision,
-            settingsRevision: settings.revision
+            settingsRevision: settings.revision,
+            knowledgeRevision: knowledge.revision,
+            projectScope: knowledge.scope
         )
     }
 
@@ -158,6 +163,7 @@ struct MainWindowView: View {
             searchFocused = true
         }
         .onDisappear { ai.cancel() }
+        .task { await knowledge.prepare() }
         .frame(minWidth: 900, minHeight: 580)
     }
 
@@ -198,6 +204,10 @@ struct MainWindowView: View {
             .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(Color.primary.opacity(0.08)) }
             .padding(.horizontal, 16)
             .padding(.top, 16)
+
+            InterviewKnowledgeControls(knowledge: knowledge)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
 
             if !query.isEmpty {
                 Text("搜索结果")
@@ -320,10 +330,10 @@ struct MainWindowView: View {
                 switch ai.state {
                 case .idle:
                     EmptyView()
-                case .waiting, .streaming:
+                case .waiting, .retrieving, .streaming:
                     HStack(spacing: 9) {
                         ProgressView().controlSize(.small)
-                        Text(ai.state == .waiting ? "等待输入结束…" : "正在生成回答…")
+                        Text(ai.state == .waiting ? "等待输入结束…" : ai.state == .retrieving ? "正在检索本地资料…" : "正在生成回答…")
                     }
                 case .complete:
                     EmptyView()
@@ -342,6 +352,7 @@ struct MainWindowView: View {
                 if !ai.answer.isEmpty {
                     MarkdownDocumentView(markdown: ai.answer)
                 }
+                InterviewAnswerSources(retrieval: ai.references)
             }
             .frame(maxWidth: 850, alignment: .leading)
             .frame(maxWidth: .infinity)
@@ -365,7 +376,7 @@ struct MainWindowView: View {
         if !matches.contains(where: { $0.id == selectedID }) {
             selectedID = matches.first?.id
         }
-        ai.update(query: query, hasResults: !matches.isEmpty, configuration: settings.activeConfiguration)
+        ai.update(query: query, hasResults: !matches.isEmpty, configuration: settings.activeConfiguration, scope: knowledge.scope)
     }
 
     private func beginAddPackage() {
