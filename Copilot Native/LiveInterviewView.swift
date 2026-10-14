@@ -149,6 +149,9 @@ struct LiveInterviewView: View {
         return VStack(alignment: .leading, spacing: 8) {
             Toggle("自动生成回答", isOn: $speech.automaticAnswers)
                 .toggleStyle(.switch).controlSize(.small)
+            if speech.automaticAnswers {
+                Text(controller.questionAnalysisStatus).font(.caption).foregroundStyle(.secondary)
+            }
             if controller.isEditing {
                 TextEditor(text: $controller.questionEdit)
                     .font(.body)
@@ -237,14 +240,10 @@ struct SpeechSettingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
                 TextField("技术热词，用逗号分隔", text: $settings.hotwords, axis: .vertical)
                     .lineLimit(2...4)
+                Text("已配置 \(settings.words.count) 个热词。核心前端词排在前面；实时识别的热词预算较小，完整词库用于句末二遍精校。修改后重新开始监听生效。")
+                    .font(.caption).foregroundStyle(.secondary)
                 Toggle("自动生成回答", isOn: $settings.automaticAnswers)
-                HStack {
-                    Text("问题结束等待")
-                    Slider(value: $settings.questionPause, in: 0.5...3, step: 0.1)
-                    Text(settings.questionPause, format: .number.precision(.fractionLength(1)))
-                    Text("秒")
-                }
-                Text("分句确认后继续等待，减少自然停顿导致的提前回答。设置自动保存到本机。")
+                Text("使用当前 AI 模型从已确认分句中提取完整面试问题、略过寒暄。完整问题确认后即分析，不受背景音和后续转写阻塞。设置自动保存到本机。")
                     .font(.caption).foregroundStyle(.secondary)
             }
             HStack {

@@ -33,6 +33,7 @@ final class LiveInterviewController {
     private(set) var level: Float = 0
     private(set) var turns: [InterviewTurn] = []
     private(set) var notice: String?
+    private(set) var questionAnalysisStatus = "等待面试问题"
     var availableApplications: [SpeechApplicationOption] = []
     var source = SpeechAudioSource.system
     var applicationID = ""
@@ -51,8 +52,8 @@ final class LiveInterviewController {
     @ObservationIgnored private var utterances: [Int: SpeechUtterance] = [:]
     @ObservationIgnored private var consumedStarts: Set<Int> = []
     @ObservationIgnored private var transcriptPrefix = ""
-    @ObservationIgnored private var previousDraft = ""
-    @ObservationIgnored private var microphoneSpeechAt = Date.distantPast
+    @ObservationIgnored private var lastAnalyzedSegments: [InterviewTranscriptSegment] = []
+    @ObservationIgnored private var analysisRetryAfter = Date.distantPast
     @ObservationIgnored private var speechSettings: SpeechSettings?
     @ObservationIgnored private var aiSettings: RemoteAISettings?
     @ObservationIgnored private var knowledge: InterviewKnowledgeBase?
@@ -92,13 +93,15 @@ final class LiveInterviewController {
                 self.connection = connection
                 utterances = [:]
                 consumedStarts = []
+                lastAnalyzedSegments = []
+                analysisRetryAfter = .distantPast
+                questionAnalysisStatus = "等待面试问题"
                 transcriptPrefix = transcript.isEmpty ? "" : transcript + "\n"
                 if !draft.isEmpty {
                     notice = "连接已切换；未提交的文字保留在问题编辑框中，请核对后提交。"
                     questionEdit = draft
                     isEditing = true
                 }
-                previousDraft = ""
                 draft = ""
                 let connectedAt = Date()
                 var acquisitionStarted = false
@@ -165,11 +168,6 @@ final class LiveInterviewController {
         for try await frame in frames {
             try Task.checkCancellation()
             level = min(1, frame.level * 8)
-            if frame.level > 0.008 {
-                microphoneSpeechAt = Date()
-                settlementTask?.cancel()
-                settlementTask = nil
-            }
             try await connection.send(frame.pcm)
             scheduleSubmission()
         }
@@ -203,9 +201,9 @@ final class LiveInterviewController {
             await sessionTask?.value
             deadline.cancel()
             sessionTask = nil
-            if !Task.isCancelled, !draft.isEmpty, speechSettings?.automaticAnswers == true, !isEditing { submit() }
             status = .idle
             stopTask = nil
+            if !Task.isCancelled { scheduleSubmission(allowStopped: true) }
         }
     }
 
@@ -228,42 +226,73 @@ final class LiveInterviewController {
     private func receive(_ result: SpeechRecognitionResult) {
         if let text = result.text { transcript = transcriptPrefix + text }
         if let snapshot = result.utterances {
-            utterances = Dictionary(snapshot.compactMap { utterance in
-                utterance.start_time.map { ($0, utterance) }
-            }, uniquingKeysWith: { _, latest in latest })
+            // ASR omits a zero start_time on the first utterance; keep it as segment 0.
+            utterances = Dictionary(snapshot.map { ($0.start_time ?? 0, $0) }, uniquingKeysWith: { _, latest in latest })
         }
         let pending = utterances.sorted { $0.key < $1.key }.filter { !consumedStarts.contains($0.key) }
         draft = pending.map(\.value.text).joined()
-        if draft != previousDraft {
-            previousDraft = draft
-            settlementTask?.cancel()
-            settlementTask = nil
-        }
         scheduleSubmission()
     }
 
-    private func scheduleSubmission() {
-        guard speechSettings?.automaticAnswers == true, !isEditing, !finishing,
-              status == .listening, settlementTask == nil, !draft.isEmpty else { return }
-        let pending = utterances.filter { !consumedStarts.contains($0.key) }
-        guard !pending.isEmpty, pending.values.allSatisfy({ $0.definite == true }) else { return }
-        let snapshot = draft
-        let delay = max(0.4, min(speechSettings?.questionPause ?? 1.2, 5))
+    private func scheduleSubmission(allowStopped: Bool = false) {
+        guard speechSettings?.automaticAnswers == true, !isEditing,
+              (!finishing || allowStopped), (status == .listening || (allowStopped && status == .idle)),
+              settlementTask == nil, Date() >= analysisRetryAfter else { return }
+        let segments = utterances.sorted { $0.key < $1.key }
+            .filter { !consumedStarts.contains($0.key) && $0.value.definite == true }
+            .prefix(8)
+            .map { InterviewTranscriptSegment(id: $0.key, text: $0.value.text) }
+        guard !segments.isEmpty, segments != lastAnalyzedSegments else { return }
+        guard let configuration = aiSettings?.activeConfiguration else {
+            questionAnalysisStatus = "请配置 AI 模型后自动分析，或点击立即回答"
+            return
+        }
+        let context = utterances.sorted { $0.key < $1.key }
+            .filter { consumedStarts.contains($0.key) }.suffix(4).map(\.value.text).joined()
         let settlementToken = UUID()
         settlementID = settlementToken
+        questionAnalysisStatus = "正在分析面试问题…"
         settlementTask = Task {
             defer { if settlementID == settlementToken { settlementTask = nil } }
             do {
-                try await Task.sleep(for: .seconds(delay))
-                guard !Task.isCancelled, draft == snapshot, !isEditing, !finishing,
-                      speechSettings?.automaticAnswers == true,
-                      Date().timeIntervalSince(microphoneSpeechAt) >= delay else { return }
-                submit()
-            } catch { }
+                // The ASR final is already endpointed. Do not wait for a second silent interval.
+                try await Task.sleep(for: .milliseconds(150))
+                let decision = try await InterviewQuestionExtractor().extract(
+                    segments: segments, recentContext: String(context.suffix(2_000)), configuration: configuration
+                )
+                try Task.checkCancellation()
+                guard settlementID == settlementToken, !isEditing,
+                      speechSettings?.automaticAnswers == true else { return }
+                lastAnalyzedSegments = segments
+                consumedStarts.formUnion(decision.consumed_ids)
+                rebuildDraft()
+                switch decision.action {
+                case .answer:
+                    questionAnalysisStatus = "已提取面试问题"
+                    appendQuestion(decision.question)
+                case .ignore:
+                    questionAnalysisStatus = "已略过寒暄，等待面试问题"
+                case .wait:
+                    questionAnalysisStatus = "等待提问补充完整…"
+                }
+                // A newer confirmed sentence may have arrived during the request.
+                settlementTask = nil
+                scheduleSubmission(allowStopped: allowStopped)
+            } catch is CancellationError { }
+            catch {
+                guard !Task.isCancelled, settlementID == settlementToken else { return }
+                questionAnalysisStatus = "问题分析失败：" + error.localizedDescription
+                analysisRetryAfter = Date().addingTimeInterval(3)
+            }
         }
     }
 
+    private func rebuildDraft() {
+        draft = utterances.sorted { $0.key < $1.key }.filter { !consumedStarts.contains($0.key) }.map(\.value.text).joined()
+    }
+
     func beginEditing() {
+        settlementID = UUID()
         settlementTask?.cancel()
         settlementTask = nil
         questionEdit = draft
@@ -277,13 +306,14 @@ final class LiveInterviewController {
     }
 
     func discardDraft() {
+        settlementID = UUID()
         settlementTask?.cancel()
         settlementTask = nil
         consumedStarts.formUnion(utterances.keys)
         draft = ""
-        previousDraft = ""
         isEditing = false
         questionEdit = ""
+        questionAnalysisStatus = "等待面试问题"
     }
 
     func submit() {
@@ -292,7 +322,11 @@ final class LiveInterviewController {
         discardDraft()
         let normalized = text.filter { !$0.isWhitespace && !$0.isPunctuation }
         if ["嗯", "好的", "好", "谢谢", "对", "是的", "没错", "明白", "OK", "ok"].contains(normalized) { return }
-        let turn = InterviewTurn(question: text)
+        appendQuestion(text)
+    }
+
+    private func appendQuestion(_ question: String) {
+        let turn = InterviewTurn(question: question.trimmingCharacters(in: .whitespacesAndNewlines))
         turns.append(turn)
         selectedTurnID = turn.id
         generateAnswer(for: turn.id)

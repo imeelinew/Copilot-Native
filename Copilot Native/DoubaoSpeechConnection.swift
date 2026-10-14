@@ -42,7 +42,7 @@ final class DoubaoSpeechConnection {
             "audio": ["format": "pcm", "codec": "raw", "rate": 16000, "bits": 16, "channel": 1],
             "request": ["model_name": "bigmodel", "enable_itn": true, "enable_punc": true,
                         "show_utterances": true, "result_type": "full", "enable_nonstream": true,
-                        "context": String(decoding: context, as: UTF8.self)]
+                        "corpus": ["context": String(decoding: context, as: UTF8.self)]]
         ]
         // Gzip framing is shared by initialization and audio, as required by the wire protocol.
         let timeout = Task {

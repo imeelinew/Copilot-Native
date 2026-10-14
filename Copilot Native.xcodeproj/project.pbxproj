@@ -36,6 +36,7 @@
 		128BF7F047524D66825B45CB /* SpeechAudioCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D298FB67D54159B5EFBC75 /* SpeechAudioCapture.swift */; };
 		49A2AB34C6254083A4E7205A /* LiveInterviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61541CE012C4244B75395C6 /* LiveInterviewController.swift */; };
 		DF9F605DE63643B0B522E9BA /* LiveInterviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A670BC22474F40EFB67BA138 /* LiveInterviewView.swift */; };
+		EE789D9FE65844C1914739CB /* InterviewQuestionExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91097E74401F4F1E9E6FB48D /* InterviewQuestionExtractor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -65,6 +66,7 @@
 		A6D298FB67D54159B5EFBC75 /* SpeechAudioCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechAudioCapture.swift; sourceTree = "<group>"; };
 		A61541CE012C4244B75395C6 /* LiveInterviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveInterviewController.swift; sourceTree = "<group>"; };
 		A670BC22474F40EFB67BA138 /* LiveInterviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveInterviewView.swift; sourceTree = "<group>"; };
+		91097E74401F4F1E9E6FB48D /* InterviewQuestionExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewQuestionExtractor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +117,7 @@
 				367C6A8A342F4770AE8CBEB9 /* InterviewKnowledgeEngine.swift */,
 				0887B4BDA8054F29A42B5389 /* InterviewKnowledgeView.swift */,
 				FE33BA4940782474F008C06E /* AIAnswerController.swift */,
+				91097E74401F4F1E9E6FB48D /* InterviewQuestionExtractor.swift */,
 				A670BC22474F40EFB67BA138 /* LiveInterviewView.swift */,
 				A61541CE012C4244B75395C6 /* LiveInterviewController.swift */,
 				A6D298FB67D54159B5EFBC75 /* SpeechAudioCapture.swift */,
@@ -223,6 +226,7 @@
 				2BA81762DD4846CDAA841F2C /* InterviewKnowledgeEngine.swift in Sources */,
 				E6C9B7FE2095490ABC1DA286 /* InterviewKnowledgeView.swift in Sources */,
 				14EA86842767CB9121C3565D /* AIAnswerController.swift in Sources */,
+				EE789D9FE65844C1914739CB /* InterviewQuestionExtractor.swift in Sources */,
 				DF9F605DE63643B0B522E9BA /* LiveInterviewView.swift in Sources */,
 				49A2AB34C6254083A4E7205A /* LiveInterviewController.swift in Sources */,
 				128BF7F047524D66825B45CB /* SpeechAudioCapture.swift in Sources */,
