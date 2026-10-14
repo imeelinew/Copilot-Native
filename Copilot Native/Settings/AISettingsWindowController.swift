@@ -6,10 +6,12 @@ import SwiftUI
 @MainActor
 final class AISettingsWindowController {
     private let settings: RemoteAISettings
+    private let speech: SpeechSettings
     private var controller: SettingsWindowController?
 
-    init(settings: RemoteAISettings) {
+    init(settings: RemoteAISettings, speech: SpeechSettings) {
         self.settings = settings
+        self.speech = speech
     }
 
     func show() {
@@ -28,7 +30,7 @@ final class AISettingsWindowController {
 
     private func makeController() -> SettingsWindowController {
         let controller = SettingsWindowController(
-            with: [AISettingsPaneController(settings: settings)],
+            with: [AISettingsPaneController(settings: settings), SpeechSettingsPaneController(settings: speech)],
             centersWindowPositionAlways: false,
             closesWindowWithEscapeKey: true
         )
@@ -88,5 +90,29 @@ private final class AISettingsPaneController: SettingsPaneViewController {
         }
         image.isTemplate = true
         return image
+    }
+}
+
+private final class SpeechSettingsPaneController: SettingsPaneViewController {
+    private let speech: SpeechSettings
+
+    init(settings: SpeechSettings) {
+        speech = settings
+        super.init(nibName: nil, bundle: nil)
+        tabName = "语音识别"
+        tabImage = NSImage(systemSymbolName: "waveform", accessibilityDescription: "语音识别")
+        tabIdentifier = "speech"
+        isResizableView = false
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func loadView() {
+        let hosting = NSHostingView(rootView: SpeechSettingsView(settings: speech, showsDoneButton: false))
+        hosting.sizingOptions = []
+        view = hosting
+        preferredPaneSize = NSSize(width: 510, height: 400)
+        view.setFrameSize(preferredPaneSize ?? .zero)
     }
 }

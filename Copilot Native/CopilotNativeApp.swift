@@ -6,13 +6,14 @@ import SwiftUI
 @Observable
 final class AppBootstrap {
     let settings = RemoteAISettings()
+    let speech = SpeechSettings()
     let knowledge = InterviewKnowledgeBase()
     let settingsWindow: AISettingsWindowController
     let library: QuestionLibrary?
     let startupError: String?
 
     init() {
-        settingsWindow = AISettingsWindowController(settings: settings)
+        settingsWindow = AISettingsWindowController(settings: settings, speech: speech)
         do {
             let container: ModelContainer
             if CommandLine.arguments.contains("-uiTesting") {
@@ -47,6 +48,7 @@ struct CopilotNativeApp: App {
                 MainWindowView(
                     library: library,
                     settings: bootstrap.settings,
+                    speech: bootstrap.speech,
                     knowledge: bootstrap.knowledge,
                     openSettings: { bootstrap.settingsWindow.show() }
                 )

@@ -24,6 +24,9 @@ targets:
       - path: Copilot Native
     settings:
       base:
+        CODE_SIGN_IDENTITY: Apple Development
+        CODE_SIGN_STYLE: Manual
+        DEVELOPMENT_TEAM: 5Q5QT76MJU
         PRODUCT_BUNDLE_IDENTIFIER: com.eli.CopilotNative
         PRODUCT_MODULE_NAME: CopilotNative
         GENERATE_INFOPLIST_FILE: YES
@@ -36,6 +39,8 @@ targets:
     info:
       path: Support/Info.plist
       properties:
+        NSMicrophoneUsageDescription: 将面试语音实时转写，并根据本地资料生成回答。
+        NSAudioCaptureUsageDescription: 识别会议应用中的面试问题，实时显示文字并生成回答。
         SUFeedURL: https://imeelinew.github.io/Copilot-Native/appcast.xml
         SUPublicEDKey: 4r6yMauRlw+aLLxSMfyZqTLD4OTPOizEzu1hKRf9wUI=
         SUScheduledCheckInterval: 86400

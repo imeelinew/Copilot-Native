@@ -44,9 +44,12 @@ private struct HierarchyDeleteRequest: Identifiable {
 struct MainWindowView: View {
     let library: QuestionLibrary
     let settings: RemoteAISettings
+    let speech: SpeechSettings
     let knowledge: InterviewKnowledgeBase
     let openSettings: () -> Void
 
+    @State private var live = LiveInterviewController()
+    @State private var showingLiveInterview = false
     @State private var query = ""
     @State private var selectedScope: LibraryScope?
     @State private var expandedPackageIDs: Set<UUID> = []
@@ -94,9 +97,20 @@ struct MainWindowView: View {
             .navigationTitle("Copilot Native")
             .navigationSplitViewColumnWidth(min: 185, ideal: 220, max: 280)
         } detail: {
-            libraryPage
+            if showingLiveInterview {
+                LiveInterviewView(controller: live, speech: speech, settings: settings, knowledge: knowledge, openSettings: openSettings) { question, answer in
+                    editor = .adding(question: question, answer: answer, capsuleID: library.preferredCapsuleID(for: selectedScope))
+                }
+            } else {
+                libraryPage
+            }
         }
         .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button { showingLiveInterview.toggle() } label: {
+                    Label(showingLiveInterview ? "返回题库" : live.isActive ? "实时面试 · 监听中" : "实时面试", systemImage: showingLiveInterview ? "text.book.closed" : "waveform")
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     editor = .adding(capsuleID: library.preferredCapsuleID(for: selectedScope))
@@ -116,6 +130,7 @@ struct MainWindowView: View {
                         expandedPackageIDs.insert(packageID)
                     }
                 }
+                if showingLiveInterview { showingLiveInterview = false }
                 synchronizeSearch()
             }
         }
@@ -162,7 +177,7 @@ struct MainWindowView: View {
         .onReceive(NotificationCenter.default.publisher(for: .focusQuestionSearch)) { _ in
             searchFocused = true
         }
-        .onDisappear { ai.cancel() }
+        .onDisappear { ai.cancel(); live.shutdown() }
         .task { await knowledge.prepare() }
         .frame(minWidth: 900, minHeight: 580)
     }

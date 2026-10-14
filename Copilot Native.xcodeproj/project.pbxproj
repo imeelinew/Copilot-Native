@@ -31,6 +31,11 @@
 		6C19BED0E281458B817E04BF /* LocalKnowledgeEmbedding.swift in Sources */ = {isa = PBXBuildFile; fileRef = F16932CF50B34E099B98FCDD /* LocalKnowledgeEmbedding.swift */; };
 		2BA81762DD4846CDAA841F2C /* InterviewKnowledgeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367C6A8A342F4770AE8CBEB9 /* InterviewKnowledgeEngine.swift */; };
 		E6C9B7FE2095490ABC1DA286 /* InterviewKnowledgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0887B4BDA8054F29A42B5389 /* InterviewKnowledgeView.swift */; };
+		093C606AA7424129B9A3D9E7 /* SpeechSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEA4B13608D8451FA8DEC3B5 /* SpeechSettings.swift */; };
+		814DDD1DD46A400784FB5B7A /* DoubaoSpeechConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C0F965DCA17492E8D3FE3EE /* DoubaoSpeechConnection.swift */; };
+		128BF7F047524D66825B45CB /* SpeechAudioCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D298FB67D54159B5EFBC75 /* SpeechAudioCapture.swift */; };
+		49A2AB34C6254083A4E7205A /* LiveInterviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61541CE012C4244B75395C6 /* LiveInterviewController.swift */; };
+		DF9F605DE63643B0B522E9BA /* LiveInterviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A670BC22474F40EFB67BA138 /* LiveInterviewView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -55,6 +60,11 @@
 		F16932CF50B34E099B98FCDD /* LocalKnowledgeEmbedding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalKnowledgeEmbedding.swift; sourceTree = "<group>"; };
 		367C6A8A342F4770AE8CBEB9 /* InterviewKnowledgeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewKnowledgeEngine.swift; sourceTree = "<group>"; };
 		0887B4BDA8054F29A42B5389 /* InterviewKnowledgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewKnowledgeView.swift; sourceTree = "<group>"; };
+		AEA4B13608D8451FA8DEC3B5 /* SpeechSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechSettings.swift; sourceTree = "<group>"; };
+		3C0F965DCA17492E8D3FE3EE /* DoubaoSpeechConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubaoSpeechConnection.swift; sourceTree = "<group>"; };
+		A6D298FB67D54159B5EFBC75 /* SpeechAudioCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechAudioCapture.swift; sourceTree = "<group>"; };
+		A61541CE012C4244B75395C6 /* LiveInterviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveInterviewController.swift; sourceTree = "<group>"; };
+		A670BC22474F40EFB67BA138 /* LiveInterviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveInterviewView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +115,11 @@
 				367C6A8A342F4770AE8CBEB9 /* InterviewKnowledgeEngine.swift */,
 				0887B4BDA8054F29A42B5389 /* InterviewKnowledgeView.swift */,
 				FE33BA4940782474F008C06E /* AIAnswerController.swift */,
+				A670BC22474F40EFB67BA138 /* LiveInterviewView.swift */,
+				A61541CE012C4244B75395C6 /* LiveInterviewController.swift */,
+				A6D298FB67D54159B5EFBC75 /* SpeechAudioCapture.swift */,
+				3C0F965DCA17492E8D3FE3EE /* DoubaoSpeechConnection.swift */,
+				AEA4B13608D8451FA8DEC3B5 /* SpeechSettings.swift */,
 				E058D497B712EAA32CA35334 /* AISettingsView.swift */,
 				B5094B1BD4ECEAFEE99DB7D0 /* AppUpdater.swift */,
 				326BFDE170B5192811EA6948 /* ChatCompletionClient.swift */,
@@ -208,6 +223,11 @@
 				2BA81762DD4846CDAA841F2C /* InterviewKnowledgeEngine.swift in Sources */,
 				E6C9B7FE2095490ABC1DA286 /* InterviewKnowledgeView.swift in Sources */,
 				14EA86842767CB9121C3565D /* AIAnswerController.swift in Sources */,
+				DF9F605DE63643B0B522E9BA /* LiveInterviewView.swift in Sources */,
+				49A2AB34C6254083A4E7205A /* LiveInterviewController.swift in Sources */,
+				128BF7F047524D66825B45CB /* SpeechAudioCapture.swift in Sources */,
+				814DDD1DD46A400784FB5B7A /* DoubaoSpeechConnection.swift in Sources */,
+				093C606AA7424129B9A3D9E7 /* SpeechSettings.swift in Sources */,
 				0D721E8E6BBE2EA8F24D1E0E /* AISettingsView.swift in Sources */,
 				C4EB2286F7261A4CCD16AE8E /* AISettingsWindowController.swift in Sources */,
 				6FCB6726F19556911F469EDB /* AppUpdater.swift in Sources */,
@@ -354,6 +374,9 @@
 		D5EEF9D6D4E505D3C603361A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = 5Q5QT76MJU;
 				ASSETCATALOG_COMPILER_APPICON_NAME = Copilot;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -376,6 +399,9 @@
 		E19DFE5F809C06D2C61C168E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = 5Q5QT76MJU;
 				ASSETCATALOG_COMPILER_APPICON_NAME = Copilot;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;

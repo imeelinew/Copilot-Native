@@ -18,6 +18,11 @@ enum AIClientError: LocalizedError {
     }
 }
 
+struct AIConversationMessage: Sendable {
+    let role: String
+    let content: String
+}
+
 struct ChatCompletionClient: InterviewAnswering {
     private struct RequestBody: Encodable {
         struct Thinking: Encodable {
@@ -73,6 +78,10 @@ struct ChatCompletionClient: InterviewAnswering {
     """
 
     func streamAnswer(for question: String, configuration: AIConfiguration, context: KnowledgeRetrieval = .empty) -> AsyncThrowingStream<String, Error> {
+        streamAnswer(for: question, configuration: configuration, context: context, conversation: [])
+    }
+
+    func streamAnswer(for question: String, configuration: AIConfiguration, context: KnowledgeRetrieval, conversation: [AIConversationMessage]) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
@@ -84,7 +93,8 @@ struct ChatCompletionClient: InterviewAnswering {
                     request.httpBody = try JSONEncoder().encode(RequestBody(
                         model: configuration.model,
                         messages: [
-                            .init(role: "system", content: Self.interviewPrompt + "\n\n" + Self.groundingPrompt),
+                            .init(role: "system", content: Self.interviewPrompt + "\n\n" + Self.groundingPrompt + "\n历史回答仅用于理解追问，不是已核实的项目事实；事实仍以当前本地资料为准。")
+                        ] + conversation.map { .init(role: $0.role, content: $0.content) } + [
                             .init(role: "user", content: context.promptContext + "\n\n面试问题：\n" + question)
                         ],
                         // DeepSeek enables thinking by default; suppress it for live interview answers.
