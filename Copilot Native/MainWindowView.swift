@@ -876,7 +876,6 @@ private struct AppKitLibrarySidebar: NSViewRepresentable {
                     title: package.name,
                     badgeCount: parent.library.questionCount(in: .package(id)),
                     indentation: 0,
-                    systemImage: "shippingbox.fill",
                     disclosureExpanded: expanded,
                     isSelected: selected
                 )
@@ -885,8 +884,7 @@ private struct AppKitLibrarySidebar: NSViewRepresentable {
                 cell.configure(
                     title: capsule.name,
                     badgeCount: parent.library.questionCount(in: .capsule(id)),
-                    indentation: 14,
-                    systemImage: "capsule.fill",
+                    indentation: 20,
                     disclosureExpanded: nil,
                     isSelected: selected
                 )
@@ -1048,10 +1046,10 @@ private final class AppKitLibrarySidebarCell: NSTableCellView {
     private static let trailingInset: CGFloat = 14
 
     private let disclosureImageView = NSImageView()
-    private let iconImageView = NSImageView()
     private let titleField = NSTextField(labelWithString: "")
     private let badgeField = NSTextField(labelWithString: "")
-    private var iconLeading: NSLayoutConstraint!
+    private var titleLeading: NSLayoutConstraint!
+    private var isPackage = false
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -1060,10 +1058,6 @@ private final class AppKitLibrarySidebarCell: NSTableCellView {
         disclosureImageView.imageScaling = .scaleProportionallyDown
         disclosureImageView.contentTintColor = .secondaryLabelColor
         disclosureImageView.translatesAutoresizingMaskIntoConstraints = false
-
-        iconImageView.imageScaling = .scaleProportionallyDown
-        iconImageView.contentTintColor = .secondaryLabelColor
-        iconImageView.translatesAutoresizingMaskIntoConstraints = false
 
         titleField.font = .systemFont(ofSize: NSFont.systemFontSize)
         titleField.lineBreakMode = .byTruncatingTail
@@ -1076,23 +1070,17 @@ private final class AppKitLibrarySidebarCell: NSTableCellView {
         badgeField.translatesAutoresizingMaskIntoConstraints = false
 
         addSubview(disclosureImageView)
-        addSubview(iconImageView)
         addSubview(titleField)
         addSubview(badgeField)
 
-        iconLeading = iconImageView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Self.leadingInset)
+        titleLeading = titleField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Self.leadingInset + 20)
         NSLayoutConstraint.activate([
             disclosureImageView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 1),
             disclosureImageView.centerYAnchor.constraint(equalTo: centerYAnchor),
             disclosureImageView.widthAnchor.constraint(equalToConstant: 18),
             disclosureImageView.heightAnchor.constraint(equalToConstant: 18),
 
-            iconLeading,
-            iconImageView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            iconImageView.widthAnchor.constraint(equalToConstant: 18),
-            iconImageView.heightAnchor.constraint(equalToConstant: 18),
-
-            titleField.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 8),
+            titleLeading,
             titleField.centerYAnchor.constraint(equalTo: centerYAnchor),
             titleField.trailingAnchor.constraint(lessThanOrEqualTo: badgeField.leadingAnchor, constant: -8),
 
@@ -1110,18 +1098,13 @@ private final class AppKitLibrarySidebarCell: NSTableCellView {
         title: String,
         badgeCount: Int,
         indentation: CGFloat,
-        systemImage: String,
         disclosureExpanded: Bool?,
         isSelected: Bool
     ) {
         titleField.stringValue = title
         badgeField.stringValue = "\(badgeCount)"
-        iconImageView.image = NSImage(
-            systemSymbolName: systemImage,
-            accessibilityDescription: title
-        )?.withSymbolConfiguration(.init(pointSize: 14, weight: .regular))
-        let disclosureOffset: CGFloat = disclosureExpanded == nil ? 0 : 20
-        iconLeading.constant = Self.leadingInset + indentation + disclosureOffset
+        isPackage = disclosureExpanded != nil
+        titleLeading.constant = Self.leadingInset + 20 + indentation
         configureDisclosure(expanded: disclosureExpanded)
         applySelectionStyle(isSelected: isSelected)
     }
@@ -1135,15 +1118,15 @@ private final class AppKitLibrarySidebarCell: NSTableCellView {
         disclosureImageView.image = NSImage(
             systemSymbolName: expanded ? "chevron.down" : "chevron.right",
             accessibilityDescription: expanded ? "收起" : "展开"
-        )?.withSymbolConfiguration(.init(pointSize: 14, weight: .bold))
+        )?.withSymbolConfiguration(.init(pointSize: 11, weight: .medium))
     }
 
     func applySelectionStyle(isSelected: Bool) {
-        let weight: NSFont.Weight = isSelected ? .semibold : .regular
+        let weight: NSFont.Weight = isPackage || isSelected ? .semibold : .regular
         titleField.font = .systemFont(ofSize: NSFont.systemFontSize, weight: weight)
         badgeField.font = .monospacedDigitSystemFont(
             ofSize: NSFont.smallSystemFontSize,
-            weight: weight
+            weight: isSelected ? .semibold : .regular
         )
     }
 }
