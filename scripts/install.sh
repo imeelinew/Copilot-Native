@@ -1,7 +1,7 @@
 #!/bin/zsh
 set -euo pipefail
 
-# Build a Release copy of Copilot Native and install it into /Applications for
+# Build a Debug copy of Copilot Native and install it into /Applications for
 # daily use. Quits any running instance first, launches the installed copy at
 # the end.
 
@@ -28,14 +28,14 @@ if pgrep -xq "$app_name"; then
     fi
 fi
 
-print "Building Release"
+print "Building Debug"
 xcodebuild \
     -project "$project" \
     -scheme "$scheme" \
-    -configuration Release \
+    -configuration Debug \
     build
 
-built_app=$(xcodebuild -project "$project" -scheme "$scheme" -configuration Release -showBuildSettings 2>/dev/null | awk '$1 == "BUILT_PRODUCTS_DIR" {print $3; exit}')/${app_name}.app
+built_app=$(xcodebuild -project "$project" -scheme "$scheme" -configuration Debug -showBuildSettings 2>/dev/null | awk '$1 == "BUILT_PRODUCTS_DIR" {print $3; exit}')/${app_name}.app
 [[ -d "$built_app" ]] || {
     print -u2 "Built app not found: $built_app"
     exit 70
