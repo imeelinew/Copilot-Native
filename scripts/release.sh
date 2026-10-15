@@ -53,13 +53,11 @@ if ! git diff --cached --quiet; then
 fi
 
 archive_path="$work_dir/Copilot Native.xcarchive"
-derived_data="$work_dir/DerivedData"
 xcodebuild archive \
     -project 'Copilot Native.xcodeproj' \
     -scheme 'Copilot Native' \
     -configuration Release \
     -archivePath "$archive_path" \
-    -derivedDataPath "$derived_data" \
     -destination 'generic/platform=macOS' \
     DEVELOPMENT_TEAM="$team_id" \
     CODE_SIGN_IDENTITY="$signing_identity" \

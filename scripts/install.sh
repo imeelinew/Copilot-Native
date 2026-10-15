@@ -14,6 +14,8 @@ installed_app="/Applications/${app_name}.app"
 
 cd "$repo_root"
 
+built_app=$(python3 "$script_dir/xcode-path.py" Debug)
+
 if pgrep -xq "$app_name"; then
     print "Quitting $app_name"
     osascript -e "tell application \"$app_name\" to quit" >/dev/null || true
@@ -35,7 +37,6 @@ xcodebuild \
     -configuration Debug \
     build
 
-built_app=$(xcodebuild -project "$project" -scheme "$scheme" -configuration Debug -showBuildSettings 2>/dev/null | awk '$1 == "BUILT_PRODUCTS_DIR" {print $3; exit}')/${app_name}.app
 [[ -d "$built_app" ]] || {
     print -u2 "Built app not found: $built_app"
     exit 70
