@@ -9,6 +9,7 @@ import SwiftUI
 final class ScreenQuestionController {
     static let shortcut = "⌃⌥⌘S"
     static let sendShortcut = "⌃⌥⌘Return"
+    static let clearShortcut = "⌃⌥⌘⌫"
     @ObservationIgnored var showFloatingAnswer: (() -> Void)?
     @ObservationIgnored var returnToMainWindow: (() -> Void)?
     private(set) var answer = ""
@@ -26,6 +27,7 @@ final class ScreenQuestionController {
     @ObservationIgnored private var inFlight: [[Data]] = []
     @ObservationIgnored private var hotKey: EventHotKeyRef?
     @ObservationIgnored private var sendHotKey: EventHotKeyRef?
+    @ObservationIgnored private var clearHotKey: EventHotKeyRef?
     @ObservationIgnored private var handler: EventHandlerRef?
     @ObservationIgnored private var generation = UUID()
     @ObservationIgnored private let captureImages: @MainActor (CGDirectDisplayID) async throws -> [Data]
@@ -46,11 +48,12 @@ final class ScreenQuestionController {
             var identifier = EventHotKeyID()
             guard GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil,
                                     MemoryLayout<EventHotKeyID>.size, nil, &identifier) == noErr,
-                  identifier.signature == 0x43505351, [1, 2].contains(identifier.id) else { return OSStatus(eventNotHandledErr) }
+                  identifier.signature == 0x43505351, [1, 2, 3].contains(identifier.id) else { return OSStatus(eventNotHandledErr) }
             MainActor.assumeIsolated {
                 let controller = Unmanaged<ScreenQuestionController>.fromOpaque(context).takeUnretainedValue()
                 if identifier.id == 1 { controller.captureScreenshot() }
-                else { controller.sendPending() }
+                else if identifier.id == 2 { controller.sendPending() }
+                else { controller.clearPending() }
             }
             return noErr
         }, 1, &event, Unmanaged.passUnretained(self).toOpaque(), &handler)
@@ -70,6 +73,13 @@ final class ScreenQuestionController {
         if sendRegistered != noErr {
             shortcutError = [shortcutError, "发送快捷键 ⌃⌥⌘Return 注册失败（\(sendRegistered)）"].compactMap { $0 }.joined(separator: "；")
         }
+        let clearRegistered = RegisterEventHotKey(
+            UInt32(kVK_Delete), UInt32(controlKey | optionKey | cmdKey),
+            EventHotKeyID(signature: 0x43505351, id: 3), GetApplicationEventTarget(), 0, &clearHotKey
+        )
+        if clearRegistered != noErr {
+            shortcutError = [shortcutError, "清空快捷键 ⌃⌥⌘⌫ 注册失败（\(clearRegistered)）"].compactMap { $0 }.joined(separator: "；")
+        }
     }
 
     func shutdown() {
@@ -78,9 +88,11 @@ final class ScreenQuestionController {
         captureTail?.cancel()
         if let hotKey { UnregisterEventHotKey(hotKey) }
         if let sendHotKey { UnregisterEventHotKey(sendHotKey) }
+        if let clearHotKey { UnregisterEventHotKey(clearHotKey) }
         if let handler { RemoveEventHandler(handler) }
         hotKey = nil
         sendHotKey = nil
+        clearHotKey = nil
         handler = nil
     }
 
@@ -275,7 +287,7 @@ struct ScreenQuestionView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             HStack {
-                Text("截图 \(ScreenQuestionController.shortcut) · 发送 \(ScreenQuestionController.sendShortcut)")
+                Text("截图 \(ScreenQuestionController.shortcut) · 发送 \(ScreenQuestionController.sendShortcut) · 清空 \(ScreenQuestionController.clearShortcut)")
                 Spacer()
                 Button("授权屏幕录制") {
                     if !CGRequestScreenCaptureAccess(),

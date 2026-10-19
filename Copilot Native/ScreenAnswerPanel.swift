@@ -177,6 +177,7 @@ private struct FloatingScreenshotAnswer: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(controller.status).font(.caption).foregroundStyle(.secondary)
                     if let error = controller.captureError { Text(error).font(.caption).foregroundStyle(.red) }
+                    if let error = controller.shortcutError { Text(error).font(.caption).foregroundStyle(.red) }
                     if let error = owner.shortcutError { Text(error).font(.caption).foregroundStyle(.red) }
                     if controller.answer.isEmpty {
                         Text("截图答案会显示在这里。你可以继续在浏览器或笔记中输入。")
@@ -190,7 +191,7 @@ private struct FloatingScreenshotAnswer: View {
                 .background(AnswerScrollBridge(proxy: owner.scroll))
             }
             Divider()
-            Text("⌃⌥⌘Space 显隐 · ⌃⌥⌘↑／↓ 滚动")
+            Text("⌃⌥⌘Space 显隐 · ⌃⌥⌘↑／↓ 滚动\n⌃⌥⌘⌫ 清空待发送截图")
                 .font(.caption).foregroundStyle(.secondary).padding(10)
         }
         .background(Color(nsColor: .windowBackgroundColor))
