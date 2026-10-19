@@ -164,8 +164,11 @@ private struct FloatingScreenshotAnswer: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("待发送 \(controller.pendingCount) 张").foregroundStyle(.secondary)
+                Text("待发送 \(controller.pendingCount) 张 · 排错 \(controller.repairCount) 次").foregroundStyle(.secondary)
                 Spacer()
+                Button("排错") { controller.captureErrorScreenshot() }
+                    .disabled(!controller.hasSession || controller.isWorking || controller.isCapturingRepair)
+                    .help("⌃⌥⌘E：截图报错并沿本题对话修复")
                 Button("主窗口") { controller.returnToMainWindow?() }
                 Button { owner.toggle() } label: { Image(systemName: "minus") }
                     .help("收起答案 · ⌃⌥⌘Space")
@@ -191,7 +194,7 @@ private struct FloatingScreenshotAnswer: View {
                 .background(AnswerScrollBridge(proxy: owner.scroll))
             }
             Divider()
-            Text("⌃⌥⌘Space 显隐 · ⌃⌥⌘↑／↓ 滚动\n⌃⌥⌘⌫ 清空待发送截图")
+            Text("⌃⌥⌘Space 显隐 · ⌃⌥⌘↑／↓ 滚动\n⌃⌥⌘⌫ 清空待发送截图 · ⌃⌥⌘E 截图排错")
                 .font(.caption).foregroundStyle(.secondary).padding(10)
         }
         .background(Color(nsColor: .windowBackgroundColor))

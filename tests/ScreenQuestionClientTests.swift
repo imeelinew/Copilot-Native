@@ -116,6 +116,93 @@ struct ScreenQuestionClientTests {
     }
 
     @MainActor
+    final class RepairProbe {
+        var requests: [[ScreenshotConversationMessage]] = []
+        var captures: [CGDirectDisplayID] = []
+        var failNext = false
+        var holdNext = false
+        var continuation: AsyncThrowingStream<String, Error>.Continuation?
+    }
+
+    @MainActor
+    static func testRepairSession() async throws {
+        let suiteName = UUID().uuidString
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let settings = RemoteAISettings(defaults: defaults, loadKey: { "test" })
+        settings.endpointText = "https://example.com/chat/completions"
+        settings.modelText = "vision-test"
+        try settings.save(defaults: defaults, saveKey: { _ in })
+        let probe = RepairProbe()
+        let controller = ScreenQuestionController(settings: settings, registerShortcuts: false, captureImages: { display in
+            probe.captures.append(display)
+            return [Data([UInt8(display)])]
+        }, answerStream: { _, _ in
+            AsyncThrowingStream { $0.yield("original code"); $0.finish() }
+        }, conversationStream: { messages, _ in
+            AsyncThrowingStream { continuation in
+                Task { @MainActor in
+                    probe.requests.append(messages)
+                    if probe.failNext { probe.failNext = false; continuation.finish(throwing: AIClientError.serverStatus(400)) }
+                    else if probe.holdNext { probe.holdNext = false; probe.continuation = continuation }
+                    else { continuation.yield("fixed code \(probe.requests.count)"); continuation.finish() }
+                }
+            }
+        })
+        controller.enqueueRepair(displayID: 20)
+        precondition(probe.captures.isEmpty && !controller.hasSession)
+        controller.enqueueCapture(displayID: 1)
+        controller.sendPending()
+        try await waitUntil { controller.hasSession && !controller.isWorking }
+        let session = controller.sessionID
+        controller.clearPending()
+        precondition(controller.sessionID == session && controller.answer == "original code")
+
+        controller.enqueueCapture(displayID: 9)
+        controller.enqueueRepair(displayID: 2)
+        try await waitUntil { probe.requests.count == 1 && !controller.isWorking && !controller.isCapturingRepair }
+        precondition(controller.sessionID == session && controller.repairCount == 1)
+        precondition(controller.pendingShots == [[Data([9])]], "Repair must not consume queued question screenshots")
+        precondition(probe.requests[0].map(\.role) == ["user", "assistant", "user"])
+        precondition(probe.requests[0][0].imageJPEGs == [Data([1])])
+        precondition(probe.requests[0][1].content == "original code" && probe.requests[0][2].imageJPEGs == [Data([2])])
+
+        controller.enqueueRepair(displayID: 3)
+        try await waitUntil { probe.requests.count == 2 && !controller.isWorking && !controller.isCapturingRepair }
+        precondition(probe.requests[1].count == 5 && probe.requests[1][3].content == "fixed code 1")
+        precondition(controller.repairCount == 2)
+        probe.failNext = true
+        controller.enqueueRepair(displayID: 4)
+        try await waitUntil { probe.requests.count == 3 && !controller.isWorking && !controller.isCapturingRepair }
+        precondition(controller.answer == "fixed code 2" && controller.repairCount == 2 && controller.sessionID == session)
+        controller.enqueueRepair(displayID: 5)
+        try await waitUntil { probe.requests.count == 4 && !controller.isWorking && !controller.isCapturingRepair }
+        precondition(probe.requests[3].count == 7 && !probe.requests[3].flatMap(\.imageJPEGs).contains(Data([4])))
+
+        probe.holdNext = true
+        controller.enqueueRepair(displayID: 6)
+        try await waitUntil { probe.continuation != nil }
+        controller.clearPending()
+        precondition(controller.isWorking && controller.sessionID == session)
+        controller.cancel()
+        precondition(controller.answer == "fixed code 4" && controller.repairCount == 3 && controller.pendingCount == 0)
+        probe.continuation = nil
+        controller.enqueueRepair(displayID: 7)
+        try await waitUntil { probe.requests.count == 6 && !controller.isWorking && !controller.isCapturingRepair }
+        precondition(probe.requests[5].count == 9 && !probe.requests[5].flatMap(\.imageJPEGs).contains(Data([6])))
+
+        controller.enqueueCapture(displayID: 10)
+        controller.sendPending()
+        try await waitUntil { controller.sessionID != session && !controller.isWorking }
+        precondition(controller.repairCount == 0)
+        controller.enqueueRepair(displayID: 11)
+        try await waitUntil { probe.requests.count == 7 && !controller.isWorking && !controller.isCapturingRepair }
+        precondition(probe.requests[6].count == 3 && probe.requests[6][0].imageJPEGs == [Data([10])])
+        controller.shutdown()
+        print("PASS: original images/code in repair session, repeated followups, queue isolation, clear, failure/cancel rollback, new-question reset")
+    }
+
+    @MainActor
     static func testProtectedPanel() async throws {
         _ = NSApplication.shared
         let suiteName = UUID().uuidString
@@ -188,6 +275,17 @@ struct ScreenQuestionClientTests {
         precondition(Data(base64Encoded: String(url.split(separator: ",")[1])) == fixture)
         precondition(messages[0]["content"] is String && json["stream"] as? Bool == true)
         precondition((json["thinking"] as? [String: String])?["type"] == "disabled")
+        let history: [ScreenshotConversationMessage] = [
+            .init(role: "user", content: "original problem", imageJPEGs: [fixture]),
+            .init(role: "assistant", content: "previous code"),
+            .init(role: "user", content: "runtime error", imageJPEGs: [fixture])
+        ]
+        let repairBody = try ChatCompletionClient.screenshotConversationRequestBody(messages: history, configuration: config)
+        let repairJSON = try JSONSerialization.jsonObject(with: repairBody) as! [String: Any]
+        let repairMessages = repairJSON["messages"] as! [[String: Any]]
+        precondition(repairMessages.map { $0["role"] as! String } == ["system", "user", "assistant", "user"])
+        precondition(repairMessages[2]["content"] as? String == "previous code")
+        precondition(repairMessages[1]["content"] is [[String: Any]] && repairMessages[3]["content"] is [[String: Any]])
 
         let sessionConfig = URLSessionConfiguration.ephemeral
         sessionConfig.protocolClasses = [StubProtocol.self]
@@ -205,7 +303,88 @@ struct ScreenQuestionClientTests {
         }
         print("PASS: image payload, multi-image, image/text streaming, HTTP failure, malformed/truncated/empty stream")
         try await testBatching()
+        try await testRepairSession()
         try await testProtectedPanel()
+
+        if CommandLine.arguments.contains("--live-repair") {
+            let defaults = UserDefaults.standard.persistentDomain(forName: "com.eli.CopilotNative")!
+            let live = AIConfiguration(endpoint: URL(string: defaults["remoteAIEndpoint"] as! String)!,
+                                       model: defaults["remoteAIModel"] as! String, apiKey: defaults["remoteAIApiKey"] as! String)
+            func screenshot(_ text: String) -> Data {
+                let image = NSImage(size: NSSize(width: 1300, height: 800))
+                image.lockFocus()
+                NSColor.white.setFill()
+                NSRect(x: 0, y: 0, width: 1300, height: 800).fill()
+                (text as NSString).draw(in: NSRect(x: 40, y: 40, width: 1220, height: 720), withAttributes: [
+                    .font: NSFont.monospacedSystemFont(ofSize: 26, weight: .regular), .foregroundColor: NSColor.black
+                ])
+                image.unlockFocus()
+                return NSBitmapImageRep(data: image.tiffRepresentation!)!.representation(using: .jpeg, properties: [.compressionFactor: 0.9])!
+            }
+            let question = screenshot("React JSX playground\nFile: src/App.jsx\nTask: a counter initially at 0. Each click must increase it by TWO.\nImplement in the current file without extra dependencies.")
+            let error = screenshot("Browser error overlay\nReferenceError: currentCount is not defined\nsrc/App.jsx:6:43\nThe page fails when clicking the button.")
+            let previousCode = """
+            修改 src/App.jsx，完整替换为：
+            ```jsx
+            import { useState } from 'react';
+            export default function App() {
+              const [count, setCount] = useState(0);
+              return <button onClick={() => setCount(currentCount + 2)}>{count}</button>;
+            }
+            ```
+            """
+            let messages: [ScreenshotConversationMessage] = [
+                ChatCompletionClient.screenshotQuestionMessage(imageJPEGs: [question], screenshotImageCounts: [1]),
+                .init(role: "assistant", content: previousCode),
+                .init(role: "user", content: "这是同一道题的排错截图。代码按你上一轮答案填写，点击按钮后报错。请结合原题和之前的代码明确指出改哪里，给最小修复，保留原题的计数要求。", imageJPEGs: [error])
+            ]
+            let answer = try await collect(ChatCompletionClient().streamScreenshotConversation(messages: messages, configuration: live))
+            precondition(answer.contains("currentCount") && answer.contains("App.jsx") && answer.contains("2"))
+            print("PASS: live repair retains original image requirement and previous code, locates error in a later screenshot\n" + answer)
+        }
+
+        if CommandLine.arguments.contains("--live-writing") || CommandLine.arguments.contains("--live-simple") {
+            // Validate placement instructions against visible, synthetic editor contexts.
+            let defaults = UserDefaults.standard.persistentDomain(forName: "com.eli.CopilotNative")!
+            let live = AIConfiguration(endpoint: URL(string: defaults["remoteAIEndpoint"] as! String)!,
+                                       model: defaults["remoteAIModel"] as! String, apiKey: defaults["remoteAIApiKey"] as! String)
+            let simple = CommandLine.arguments.contains("--live-simple")
+            let fixtures = simple ? [
+                "React JavaScript playground\nVisible file: src/App.jsx\nStopwatch task (30 minutes):\nBuild a stopwatch with Start/Stop and Reset buttons.\nStart/Stop starts or pauses; restarting continues elapsed time.\nReset sets elapsed time to zero and stops.\nDisplay elapsed time as a clickable button (also toggles start/stop).\nThere are THREE buttons: timer display, separate Start/Stop control, separate Reset control.\nFormat hours, minutes, seconds and TWO-DIGIT HUNDREDTHS of a second.\nLeading zero hours/minutes may be omitted.\nComplete units must carry at exact boundaries, not overflow.\nStart/Stop label must match running state.\nUse React; focus on functionality.\n\nCurrent src/App.jsx:\nexport default function App() { return <div>Todo</div>; }"
+            ] : [
+                "Online Judge - Python 3\nTask: Given nums and target, return indices of the two numbers adding to target.\nComplete the method below. Keep the signature. No stdin required.\n\nCurrent editor:\nclass Solution:\n    def twoSum(self, nums: list[int], target: int) -> list[int]:\n        pass",
+                "React + TypeScript project\nVisible files:\nsrc/App.tsx\nsrc/main.tsx\npackage.json\n\nTask: Implement useCounter(initial) with count, increment(), reset().\nDemonstrate it with two buttons in App. Use the existing project.\nCurrent src/App.tsx:\nexport default function App() { return <div>Todo</div>; }"
+            ]
+            for (index, fixture) in fixtures.enumerated() {
+                let image = NSImage(size: NSSize(width: 1500, height: 1000))
+                image.lockFocus()
+                NSColor.white.setFill()
+                NSRect(x: 0, y: 0, width: 1500, height: 1000).fill()
+                (fixture as NSString).draw(in: NSRect(x: 40, y: 50, width: 1420, height: 900), withAttributes: [
+                    .font: NSFont.monospacedSystemFont(ofSize: 25, weight: .regular), .foregroundColor: NSColor.black
+                ])
+                image.unlockFocus()
+                let jpeg = NSBitmapImageRep(data: image.tiffRepresentation!)!.representation(using: .jpeg, properties: [.compressionFactor: 0.9])!
+                let answer = try await collect(ChatCompletionClient().streamScreenshotAnswer(imageJPEGs: [jpeg], configuration: live, screenshotImageCounts: [1]))
+                guard let fence = answer.range(of: "```") else { preconditionFailure("Missing answer code") }
+                let guidance = String(answer[..<fence.lowerBound])
+                precondition(guidance.count > 30, "Writing guidance must precede code")
+                if simple {
+                    precondition(guidance.contains("src/App.jsx"))
+                    precondition(answer.contains("setInterval") && answer.contains("clearInterval"))
+                    precondition(answer.contains("Date.now") || answer.contains("performance.now"))
+                    precondition(!answer.contains("requestAnimationFrame("))
+                    precondition(answer.contains("Stop") && answer.contains("Start") && answer.components(separatedBy: "<button").count >= 4,
+                                 "Simplification must preserve all three required buttons")
+                    precondition(!answer.contains("eslint-disable"), "Simple answer must keep correct Effect dependencies")
+                    let fences = answer.components(separatedBy: "\n").filter { $0.hasPrefix("```") }
+                    precondition(fences.count == 2, "Single-file demo must contain one final version, not multiple revisions")
+                }
+                else if index == 0 { precondition(guidance.contains("代码框") || guidance.contains("编辑器")) }
+                else { precondition(guidance.contains("src/App.tsx") && (guidance.contains("新建") || guidance.contains("修改"))) }
+                print("PASS: live \(simple ? "simple stopwatch" : "writing guidance") fixture \(index + 1)\n" + answer + "\n")
+            }
+        }
 
         if CommandLine.arguments.contains("--live") {
             // Deliberately send only a generated fixture, never the user's desktop.
