@@ -372,7 +372,8 @@ final class LiveInterviewController {
             do {
                 let retrieval: KnowledgeRetrieval
                 do {
-                    retrieval = try await InterviewKnowledgeEngine.shared.retrieve(question: question, scope: scope, previousProject: previousProject, previousQuestion: history.last?.question)
+                    retrieval = try await InterviewKnowledgeEngine.shared.retrieve(question: question, scope: scope, previousProject: previousProject, previousQuestion: history.last?.question,
+                        previousPassageIDs: history.last?.references.passages.map(\.id) ?? [])
                 } catch is CancellationError { throw CancellationError() }
                 catch { retrieval = .init(passages: [], projectIDs: [], usedVectors: false, warning: "本地资料读取失败：" + error.localizedDescription) }
                 try Task.checkCancellation()

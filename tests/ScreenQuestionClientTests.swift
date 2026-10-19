@@ -5,6 +5,7 @@ import Foundation
 // This harness isolates transport from the local knowledge database and MLX.
 struct KnowledgeRetrieval: Sendable {
     static let empty = KnowledgeRetrieval()
+    var projectIDs: [String] { [] }
     var promptContext: String { "" }
 }
 

@@ -22,6 +22,17 @@ actor InterviewKnowledgeEngine {
     private var semanticReady = false
     private var preparingVectors = false
     private let embedder = LocalKnowledgeEmbedding()
+    private let home: URL
+    private let factsURL: URL
+    private let inMemory: Bool
+
+    init(home: URL = URL(filePath: NSHomeDirectory(), directoryHint: .isDirectory),
+         factsURL: URL? = nil, inMemory: Bool = false) {
+        self.home = home
+        self.factsURL = factsURL ?? Bundle.main.url(forResource: "ProjectFacts", withExtension: "json")
+            ?? home.appending(path: "Resumes/AI面试知识库/项目事实.json")
+        self.inMemory = inMemory
+    }
 
     private struct FactDocument: Decodable { let facts: [Fact] }
     private struct Fact: Decodable {
@@ -32,20 +43,28 @@ actor InterviewKnowledgeEngine {
         let content: String
         let boundary: String
         let sources: [KnowledgeSource]
+        let questions: [String]?
+        let relatedIDs: [String]?
 
         enum CodingKeys: String, CodingKey {
             case id, title, keywords, content, boundary, sources
             case projectID = "project_id"
+            case questions
+            case relatedIDs = "related_ids"
         }
 
-        var passage: KnowledgePassage {
-            .init(id: id, projectID: projectID, title: title, keywords: keywords,
-                  content: content, boundary: boundary, sources: sources)
+        func passage(home: URL) -> KnowledgePassage {
+            let resolved = sources.map { source in
+                KnowledgeSource(path: source.path.hasPrefix("/") ? source.path
+                    : home.appending(path: "Dev/\(projectID)/\(source.path)").path,
+                    line: source.line, anchor: source.anchor, sha256: source.sha256)
+            }
+            return .init(id: id, projectID: projectID, title: title, keywords: keywords,
+                  content: content, boundary: boundary, sources: resolved,
+                  questions: questions, relatedIDs: relatedIDs)
         }
     }
 
-    private var home: URL { URL(filePath: NSHomeDirectory(), directoryHint: .isDirectory) }
-    private var factsURL: URL { home.appending(path: "Resumes/AI面试知识库/项目事实.json") }
     private let generalNames = [
         "01.css.md", "02.html.md", "03.Html5.md", "04.js.md", "05.git.md", "06.vue.md",
         "07.vue3.md", "08.webpack.md", "09.react1.0.md", "10.react2.0.md", "11.浏览器.md", "React diff.md"
@@ -59,8 +78,10 @@ actor InterviewKnowledgeEngine {
             ).appending(path: "com.eli.CopilotNative")
             try FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
             let schema = Schema([InterviewKnowledgeRecord.self])
-            let configuration = ModelConfiguration("InterviewKnowledge", schema: schema,
-                url: support.appending(path: "InterviewKnowledge.store"))
+            let configuration = inMemory
+                ? ModelConfiguration("InterviewKnowledgeTests", schema: schema, isStoredInMemoryOnly: true)
+                : ModelConfiguration("InterviewKnowledge", schema: schema,
+                    url: support.appending(path: "InterviewKnowledge.store"))
             let container = try SwiftData.ModelContainer(for: schema, configurations: configuration)
             store = container
             context = ModelContext(container)
@@ -72,14 +93,15 @@ actor InterviewKnowledgeEngine {
         staleCount = 0
         for fact in document.facts {
             guard ["mobile-shop", "datapilot-rebuild"].contains(fact.projectID), !fact.sources.isEmpty else { continue }
-            let valid = fact.sources.allSatisfy { source in
+            let passage = fact.passage(home: home)
+            let valid = passage.sources.allSatisfy { source in
                 guard isProjectSource(source, projectID: fact.projectID) else { return false }
                 if hashes[source.path] == nil {
                     hashes[source.path] = (try? Data(contentsOf: URL(filePath: source.path))).map(KnowledgeDigest.hash) ?? "missing"
                 }
                 return hashes[source.path] == source.sha256
             }
-            if valid { freshPassages.append(fact.passage) } else { staleCount += 1 }
+            if valid { freshPassages.append(passage) } else { staleCount += 1 }
         }
 
         let generalRoot = home.appending(path: "Resumes/前端面试题2025")
@@ -148,27 +170,43 @@ actor InterviewKnowledgeEngine {
         return status()
     }
 
-    func retrieve(question: String, scope: InterviewProjectScope, previousProject: String?, previousQuestion: String?) async throws -> KnowledgeRetrieval {
+    func retrieve(question: String, scope: InterviewProjectScope, previousProject: String?, previousQuestion: String?, previousPassageIDs: [String] = []) async throws -> KnowledgeRetrieval {
         try Task.checkCancellation()
         if passages.isEmpty { _ = try load() }
         let lower = question.lowercased()
         var projects: [String] = []
         if scope != .general {
-            if lower.contains("两个项目") || lower.contains("这两个") { projects = ["mobile-shop", "datapilot-rebuild"] }
-            if lower.contains("轻购") || lower.contains("mobile-shop") { projects.append("mobile-shop") }
-            if lower.contains("城市视图") || lower.contains("datapilot") { projects.append("datapilot-rebuild") }
+            if ["两个项目", "这两个", "两个的项目", "vue和react项目", "vue 和 react 项目"].contains(where: lower.contains) { projects = ["mobile-shop", "datapilot-rebuild"] }
+            if ["轻购", "mobile-shop"].contains(where: lower.contains) { projects.append("mobile-shop") }
+            if ["城市视图", "datapilot"].contains(where: lower.contains) { projects.append("datapilot-rebuild") }
+            if projects.isEmpty, lower.contains("另一个项目"), let previousProject {
+                projects = [previousProject == "mobile-shop" ? "datapilot-rebuild" : "mobile-shop"]
+            }
+            if projects.isEmpty {
+                if ["电商", "商城", "vue项目", "vue 项目", "vue那个"].contains(where: lower.contains) { projects.append("mobile-shop") }
+                if ["城市项目", "react项目", "react 项目", "react那个", "可视化项目", "可视化平台"].contains(where: lower.contains) { projects.append("datapilot-rebuild") }
+            }
             if projects.isEmpty, let selected = scope.projectID { projects = [selected] }
             if projects.isEmpty, let previousProject, isFollowUp(lower) { projects = [previousProject] }
+            // A feature hint must never override an explicitly named/selected project.
+            if projects.isEmpty {
+                if ["购物车", "商品详情", "sku", "收货地址", "搜索联想"].contains(where: lower.contains) { projects.append("mobile-shop") }
+                if ["图表编辑", "仪表盘", "城市沙盘", "高德地图"].contains(where: lower.contains) { projects.append("datapilot-rebuild") }
+            }
         }
         projects = Array(Set(projects)).sorted()
-        let projectQuestion = scope != .general && (!projects.isEmpty || ["项目", "你做", "你用", "你负责"].contains(where: lower.contains))
+        let projectQuestion = scope != .general && (!projects.isEmpty || ["项目", "你做", "你用", "你负责", "你们", "你这边"].contains(where: lower.contains))
         // Broad introductions need their overview; relevance ranking alone would omit it.
-        let overviewQuestion = ["介绍", "整体", "架构", "技术栈"].contains(where: lower.contains)
+        let overviewQuestion = ["介绍", "整体", "架构", "技术栈", "讲讲项目", "说说项目", "项目是做什么", "项目做什么", "项目干什么"].contains(where: lower.contains)
         let followUp: String?
         if let previousProject, isFollowUp(lower), projects == [previousProject] {
             followUp = previousQuestion
         } else { followUp = nil }
-        let retrievalQuestion = followUp.map { $0 + "。追问：" + question } ?? question
+        // Carry the retrieved topic across short successive followups, not only the last utterance.
+        let priorTopics = followUp == nil ? [] : passages.filter {
+            previousPassageIDs.prefix(3).contains($0.id) && projects.contains($0.projectID ?? "")
+        }.map(\.title)
+        let retrievalQuestion = followUp.map { $0 + "。相关功能：" + priorTopics.joined(separator: "、") + "。追问：" + question } ?? question
         let queryTerms = tokenize(retrievalQuestion)
         var candidates = passages.filter { passage in
             if scope == .general { return passage.projectID == nil }
@@ -222,28 +260,28 @@ actor InterviewKnowledgeEngine {
             let second = (fused[$1.id] ?? 0) * (projectQuestion && $1.projectID != nil ? 1.6 : 1)
             return first == second ? $0.id < $1.id : first > second
         }
-        // Keep closely related implementation steps together instead of extrapolating from one fragment.
-        let relatedGroups = [["QG-02", "QG-03"], ["QG-05", "QG-06"], ["QG-08", "QG-09"],
-                             ["QG-10", "QG-11"], ["CITY-07", "CITY-08"], ["CITY-09", "CITY-10"]]
-        let leadingIDs = Set(ordered.prefix(2).map(\.id))
-        let neighbors = relatedGroups.filter { $0.contains(where: leadingIDs.contains) }.flatMap { $0 }
-        let forced = candidates.filter { passage in
-            neighbors.contains(passage.id) || (overviewQuestion && projects.contains(passage.projectID ?? "") && ["QG-01", "CITY-01"].contains(passage.id))
+        // Preserve the best matches, then attach their verified implementation neighbors.
+        // Links can only select fresh evidence from the current project candidate set.
+        let overview = candidates.filter {
+            overviewQuestion && projectQuestion && (projects.isEmpty || projects.contains($0.projectID ?? "")) && ["QG-01", "CITY-01"].contains($0.id)
         }
-        let forcedIDs = Set(forced.map(\.id))
-        ordered = forced + ordered.filter { !forcedIDs.contains($0.id) }
+        let primary = Array(ordered.prefix(4))
+        let neighborIDs = ordered.prefix(2).flatMap { $0.relatedIDs ?? [] }
+        let neighbors = neighborIDs.compactMap { id in candidates.first { $0.id == id } }
+        var seen = Set<String>()
+        ordered = (overview + primary + neighbors + ordered).filter { seen.insert($0.id).inserted }
         var selected: [KnowledgePassage] = []
         var characters = 0
         for passage in ordered {
             if passage.projectID == nil && projectQuestion && selected.filter({ $0.projectID == nil }).count >= 2 { continue }
             let size = passage.content.count + passage.boundary.count
-            if characters + size > 4800 || selected.count >= 8 { continue }
+            if characters + size > 8000 || selected.count >= 10 { continue }
             selected.append(passage)
             characters += size
         }
         if projects.isEmpty, projectQuestion {
             let matchedProjects = Set(selected.compactMap(\.projectID))
-            if matchedProjects.count == 1 { projects = Array(matchedProjects) }
+            projects = matchedProjects.sorted()
         }
         var warnings: [String] = []
         if let semanticWarning { warnings.append(semanticWarning) }
@@ -359,6 +397,6 @@ actor InterviewKnowledgeEngine {
     }
 
     private func isFollowUp(_ question: String) -> Bool {
-        ["那", "这个", "这里", "它", "为什么这样", "怎么实现", "还有", "继续", "展开", "改进", "不足"].contains(where: question.hasPrefix)
+        ["那", "这个", "这里", "它", "为什么", "怎么", "如何", "还有", "继续", "展开", "改进", "不足", "具体", "如果", "有没有", "会不会"].contains(where: question.hasPrefix)
     }
 }

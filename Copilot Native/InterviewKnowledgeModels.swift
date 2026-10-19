@@ -38,11 +38,13 @@ struct KnowledgePassage: Codable, Identifiable, Sendable {
     let content: String
     let boundary: String
     let sources: [KnowledgeSource]
+    var questions: [String]? = nil
+    var relatedIDs: [String]? = nil
 
-    var searchText: String { ([title] + keywords + [content]).joined(separator: " ") }
-    var embeddingText: String { title + "。" + keywords.joined(separator: "、") + "。" + content }
+    var searchText: String { ([title] + keywords + (questions ?? []) + [content]).joined(separator: " ") }
+    var embeddingText: String { title + "。" + keywords.joined(separator: "、") + "。" + (questions ?? []).joined(separator: "。") + "。" + content }
     var fingerprint: String {
-        KnowledgeDigest.hash(Data((searchText + boundary + sources.map(\.sha256).joined()).utf8))
+        KnowledgeDigest.hash(Data((searchText + boundary + (relatedIDs ?? []).joined() + sources.map(\.sha256).joined()).utf8))
     }
     var projectName: String {
         switch projectID {
