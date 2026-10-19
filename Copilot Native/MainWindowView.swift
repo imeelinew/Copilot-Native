@@ -46,10 +46,12 @@ struct MainWindowView: View {
     let settings: RemoteAISettings
     let speech: SpeechSettings
     let knowledge: InterviewKnowledgeBase
+    let screenQuestions: ScreenQuestionController
     let openSettings: () -> Void
 
     @State private var live = LiveInterviewController()
     @State private var showingLiveInterview = false
+    @State private var showingScreenQuestions = false
     @State private var query = ""
     @State private var selectedScope: LibraryScope?
     @State private var expandedPackageIDs: Set<UUID> = []
@@ -97,7 +99,9 @@ struct MainWindowView: View {
             .navigationTitle("Copilot Native")
             .navigationSplitViewColumnWidth(min: 185, ideal: 220, max: 280)
         } detail: {
-            if showingLiveInterview {
+            if showingScreenQuestions {
+                ScreenQuestionView(controller: screenQuestions)
+            } else if showingLiveInterview {
                 LiveInterviewView(controller: live, speech: speech, settings: settings, knowledge: knowledge, openSettings: openSettings) { question, answer in
                     editor = .adding(question: question, answer: answer, capsuleID: library.preferredCapsuleID(for: selectedScope))
                 }
@@ -107,7 +111,13 @@ struct MainWindowView: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button { showingLiveInterview.toggle() } label: {
+                Button { showingScreenQuestions.toggle() } label: {
+                    Label(showingScreenQuestions ? "返回" : "截图解题", systemImage: showingScreenQuestions ? "arrow.backward" : "viewfinder")
+                }
+                .help("查看截图解答；截图 ⌃⌥⌘S，发送 ⌃⌥⌘Return")
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button { showingScreenQuestions = false; showingLiveInterview.toggle() } label: {
                     Label(showingLiveInterview ? "返回题库" : live.isActive ? "实时面试 · 监听中" : "实时面试", systemImage: showingLiveInterview ? "text.book.closed" : "waveform")
                 }
             }

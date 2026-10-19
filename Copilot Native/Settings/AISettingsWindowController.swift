@@ -19,6 +19,9 @@ final class AISettingsWindowController {
             controller = makeController()
         }
         guard let controller else { return }
+        if let window = controller.window {
+            ScreenCapturePrivacy.apply(to: window)
+        }
         NSApp.activate(ignoringOtherApps: true)
         controller.showWindow(nil)
         Task { @MainActor in
