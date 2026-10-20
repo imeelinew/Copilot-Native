@@ -114,6 +114,21 @@ struct LiveInterviewPanelTests {
         precondition(panel.isVisible && live.turns.count == 2)
         precondition(NSApp.keyWindow === keyWindow)
         precondition(Set(LiveInterviewPanelController.Action.allCases.map(\.keyCode)).count == LiveInterviewPanelController.Action.allCases.count)
+        // The shared left/right keys must scroll screenshot code instead of changing interview history.
+        owner.routeHorizontal = { direction in screenOwner.handleHorizontalScroll(direction) }
+        owner.disable()
+        screenOwner.preparePanel().setFrameOrigin(NSPoint(x: -10000, y: -10000))
+        screenOwner.enable()
+        let interviewIndex = live.selectedIndex
+        owner.perform(.previous)
+        owner.perform(.next)
+        precondition(live.selectedIndex == interviewIndex)
+        screenOwner.toggle()
+        owner.perform(.previous)
+        precondition(live.selectedIndex == interviewIndex, "Hidden screenshot mode must also consume left/right")
+        screenOwner.disable()
+        owner.perform(.previous)
+        precondition(live.selectedIndex == 0)
         try await testReliability()
         print("PASS: accessory activation policy; protected nonactivating panel and child; shared interview history, navigation, retry, offline listening guard, automatic-answer toggle, ignore, scroll routing and hide/reopen lifecycle")
     }

@@ -56,6 +56,7 @@ final class LiveInterviewPanelController {
     @ObservationIgnored var beforeEnable: (() -> Void)?
     @ObservationIgnored var hideMainWindow: (() -> Void)?
     @ObservationIgnored var returnToMainWindow: (() -> Void)?
+    @ObservationIgnored var routeHorizontal: ((Int) -> Bool)?
     @ObservationIgnored let scroll = AnswerScrollProxy()
     @ObservationIgnored private let controller: LiveInterviewController
     @ObservationIgnored private let speech: SpeechSettings
@@ -102,8 +103,8 @@ final class LiveInterviewPanelController {
         case .stopAnswer: controller.cancelAnswer()
         case .retry: controller.retrySelectedAnswer()
         case .automatic: speech.automaticAnswers.toggle(); controller.automaticAnswersChanged()
-        case .previous: controller.selectTurn(offset: -1)
-        case .next: controller.selectTurn(offset: 1)
+        case .previous: if routeHorizontal?(-1) != true { controller.selectTurn(offset: -1) }
+        case .next: if routeHorizontal?(1) != true { controller.selectTurn(offset: 1) }
         case .mainWindow: returnToMainWindow?()
         case .ignore: controller.discardDraft()
         }
@@ -133,7 +134,7 @@ final class LiveInterviewPanelController {
             panel.setFrame(NSRect(x: area.maxX - size.width, y: area.maxY - size.height,
                                   width: size.width, height: size.height), display: false)
         }
-        panel.contentView = NSHostingView(rootView: FloatingInterviewAnswer(controller: controller, speech: speech, owner: self))
+        panel.contentView = AnswerHostingView(rootView: FloatingInterviewAnswer(controller: controller, speech: speech, owner: self))
         ScreenCapturePrivacy.apply(to: panel)
         self.panel = panel
         return panel

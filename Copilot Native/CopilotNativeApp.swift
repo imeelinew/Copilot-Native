@@ -13,6 +13,7 @@ final class MainWindowShortcut {
     @ObservationIgnored var interviewPanel: LiveInterviewPanelController?
     @ObservationIgnored var openNewWindow: (() -> Void)?
     @ObservationIgnored private var hotKey: EventHotKeyRef?
+    @ObservationIgnored private var quickHotKey: EventHotKeyRef?
     @ObservationIgnored private var handler: EventHandlerRef?
     @ObservationIgnored private var closeObserver: NSObjectProtocol?
 
@@ -31,7 +32,7 @@ final class MainWindowShortcut {
             var identifier = EventHotKeyID()
             guard GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil,
                                     MemoryLayout<EventHotKeyID>.size, nil, &identifier) == noErr,
-                  identifier.signature == 0x4350574E, identifier.id == 1 else { return OSStatus(eventNotHandledErr) }
+                  identifier.signature == 0x4350574E, [1, 2].contains(identifier.id) else { return OSStatus(eventNotHandledErr) }
             MainActor.assumeIsolated {
                 Unmanaged<MainWindowShortcut>.fromOpaque(context).takeUnretainedValue().toggle()
             }
@@ -44,6 +45,11 @@ final class MainWindowShortcut {
         let registered = RegisterEventHotKey(UInt32(kVK_Space), UInt32(controlKey | optionKey | cmdKey),
                                             EventHotKeyID(signature: 0x4350574E, id: 1), GetApplicationEventTarget(), 0, &hotKey)
         if registered != noErr { error = "唤起窗口快捷键 ⌃⌥⌘Space 被占用（\(registered)）" }
+        let quickRegistered = RegisterEventHotKey(UInt32(kVK_Space), UInt32(optionKey),
+                                                 EventHotKeyID(signature: 0x4350574E, id: 2), GetApplicationEventTarget(), 0, &quickHotKey)
+        if quickRegistered != noErr {
+            error = [error, "快速显隐快捷键 ⌥Space 被占用（\(quickRegistered)）"].compactMap { $0 }.joined(separator: "；")
+        }
     }
 
     func toggle() {
@@ -80,9 +86,11 @@ final class MainWindowShortcut {
 
     func shutdown() {
         if let hotKey { UnregisterEventHotKey(hotKey) }
+        if let quickHotKey { UnregisterEventHotKey(quickHotKey) }
         if let handler { RemoveEventHandler(handler) }
         if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
         hotKey = nil
+        quickHotKey = nil
         handler = nil
         closeObserver = nil
     }
@@ -169,6 +177,7 @@ final class AppBootstrap {
         interviewPanel.hideMainWindow = { [weak windowShortcut] in windowShortcut?.window?.orderOut(nil) }
         interviewPanel.beforeEnable = { [weak answerPanel] in answerPanel?.disable() }
         answerPanel.routeScroll = { [weak interviewPanel] direction in interviewPanel?.routeScroll(direction) ?? false }
+        interviewPanel.routeHorizontal = { [weak answerPanel] direction in answerPanel?.handleHorizontalScroll(direction) ?? false }
         live.showFloatingAnswer = { [weak interviewPanel] in interviewPanel?.enable() }
         screenQuestions.showFloatingAnswer = { [weak answerPanel, weak interviewPanel] in
             interviewPanel?.disable()

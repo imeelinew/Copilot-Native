@@ -250,12 +250,24 @@ struct ScreenQuestionClientTests {
         controller.enqueueCapture(displayID: 1)
         controller.sendPending()
         try await waitUntil { controller.answer.count > 500 && !controller.isWorking }
-        let owner = ScreenAnswerPanelController(controller: controller, registerShortcuts: false)
+        let owner = ScreenAnswerPanelController(controller: controller, registerShortcuts: false, defaults: defaults)
+        precondition(owner.backgroundOpacity == 0.7)
+        owner.setBackgroundOpacity(0.45)
+        let reloadedOwner = ScreenAnswerPanelController(controller: controller, registerShortcuts: false, defaults: defaults)
+        precondition(reloadedOwner.backgroundOpacity == 0.45, "Background opacity must survive a restart")
+        reloadedOwner.shutdown()
+        owner.setBackgroundOpacity(-1)
+        precondition(owner.backgroundOpacity == 0.25)
+        owner.setBackgroundOpacity(.nan)
+        precondition(owner.backgroundOpacity == 0.25)
+        owner.setBackgroundOpacity(0.7)
         let keyWindow = NSApp.keyWindow
         let panel = owner.preparePanel()
         precondition(!panel.isVisible && !panel.canBecomeKey && !panel.canBecomeMain)
         precondition(panel.styleMask.contains(.nonactivatingPanel) && panel.level == .floating)
         precondition(!panel.hidesOnDeactivate && panel.sharingType == .none)
+        precondition(!panel.isOpaque && panel.backgroundColor?.alphaComponent == 0 && panel.alphaValue == 1,
+                     "Only the background should be translucent; keep text and controls at full opacity")
         let original = UserDefaults.standard.object(forKey: ScreenCapturePrivacy.defaultsKey)
         defer {
             if let original { UserDefaults.standard.set(original, forKey: ScreenCapturePrivacy.defaultsKey) }
@@ -283,6 +295,10 @@ struct ScreenQuestionClientTests {
                      "Scrolling the explanation must not move the solution")
         owner.scroll.reset()
         owner.explanationScroll.reset()
+        precondition(owner.scroll.scrollHorizontally(1), "Right key must move the visible code block horizontally")
+        precondition(!owner.explanationScroll.scrollHorizontally(1), "Plain explanation must not move the solution code")
+        precondition(owner.scroll.scrollHorizontally(-1), "Left key must return toward the start of the code line")
+        precondition(!owner.scroll.scrollHorizontally(-1), "Horizontal scrolling must clamp at the left edge")
         if let view = panel.contentView, let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
             view.cacheDisplay(in: view.bounds, to: bitmap)
             try bitmap.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: "/tmp/copilot-answer-panel-preview.png"))
