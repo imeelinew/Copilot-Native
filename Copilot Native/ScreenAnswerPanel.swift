@@ -9,38 +9,6 @@ final class ProtectedAnswerPanel: NSPanel {
     override var canBecomeMain: Bool { false }
 }
 
-/// Keep the pointer consistent with the editor while hovering a nonactivating answer.
-final class AnswerHostingView<Content: View>: NSHostingView<Content> {
-    private var pointerTracking: NSTrackingArea?
-
-    override func resetCursorRects() {
-        super.resetCursorRects()
-        addCursorRect(bounds, cursor: .iBeam)
-    }
-
-    override func updateTrackingAreas() {
-        super.updateTrackingAreas()
-        if let pointerTracking { removeTrackingArea(pointerTracking) }
-        let tracking = NSTrackingArea(rect: .zero,
-                                      options: [.inVisibleRect, .activeAlways, .cursorUpdate, .mouseEnteredAndExited, .mouseMoved],
-                                      owner: self, userInfo: nil)
-        addTrackingArea(tracking)
-        pointerTracking = tracking
-    }
-
-    override func mouseEntered(with event: NSEvent) {
-        super.mouseEntered(with: event)
-        NSCursor.iBeam.set()
-    }
-
-    override func mouseMoved(with event: NSEvent) {
-        super.mouseMoved(with: event)
-        NSCursor.iBeam.set()
-    }
-
-    override func cursorUpdate(with event: NSEvent) { NSCursor.iBeam.set() }
-}
-
 @MainActor
 final class AnswerScrollProxy {
     weak var view: NSScrollView?
@@ -200,7 +168,7 @@ final class ScreenAnswerPanelController {
                 panel.setFrame(NSRect(x: area.maxX - size.width, y: area.maxY - size.height, width: size.width, height: size.height), display: false)
             }
         }
-        panel.contentView = AnswerHostingView(rootView: FloatingScreenshotAnswer(controller: controller, owner: self))
+        panel.contentView = NSHostingView(rootView: FloatingScreenshotAnswer(controller: controller, owner: self))
         ScreenCapturePrivacy.apply(to: panel)
         self.panel = panel
         return panel

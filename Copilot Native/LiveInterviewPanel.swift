@@ -134,7 +134,7 @@ final class LiveInterviewPanelController {
             panel.setFrame(NSRect(x: area.maxX - size.width, y: area.maxY - size.height,
                                   width: size.width, height: size.height), display: false)
         }
-        panel.contentView = AnswerHostingView(rootView: FloatingInterviewAnswer(controller: controller, speech: speech, owner: self))
+        panel.contentView = NSHostingView(rootView: FloatingInterviewAnswer(controller: controller, speech: speech, owner: self))
         ScreenCapturePrivacy.apply(to: panel)
         self.panel = panel
         return panel
