@@ -10,6 +10,7 @@ final class MainWindowShortcut {
     private(set) var error: String?
     @ObservationIgnored weak var window: NSWindow?
     @ObservationIgnored var answerPanel: ScreenAnswerPanelController?
+    @ObservationIgnored var interviewPanel: LiveInterviewPanelController?
     @ObservationIgnored var openNewWindow: (() -> Void)?
     @ObservationIgnored private var hotKey: EventHotKeyRef?
     @ObservationIgnored private var handler: EventHandlerRef?
@@ -46,6 +47,10 @@ final class MainWindowShortcut {
     }
 
     func toggle() {
+        if let interviewPanel, interviewPanel.isEnabled {
+            interviewPanel.toggle()
+            return
+        }
         if let answerPanel, answerPanel.isEnabled {
             answerPanel.toggle()
             return
@@ -86,6 +91,18 @@ final class MainWindowShortcut {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var onTerminate: (() -> Void)?
+    var onReopen: (() -> Void)?
+
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.accessory)
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        onReopen?()
+        return false
+    }
 
     func applicationWillTerminate(_ notification: Notification) { onTerminate?() }
 
@@ -133,6 +150,9 @@ final class AppBootstrap {
     let settingsWindow: AISettingsWindowController
     let answerPanel: ScreenAnswerPanelController
     let screenQuestions: ScreenQuestionController
+    let live = LiveInterviewController()
+    let presentation = AppPresentation()
+    let interviewPanel: LiveInterviewPanelController
     let windowShortcut = MainWindowShortcut()
     let library: QuestionLibrary?
     let startupError: String?
@@ -141,11 +161,29 @@ final class AppBootstrap {
         settingsWindow = AISettingsWindowController(settings: settings, speech: speech)
         screenQuestions = ScreenQuestionController(settings: settings)
         answerPanel = ScreenAnswerPanelController(controller: screenQuestions)
+        interviewPanel = LiveInterviewPanelController(controller: live, speech: speech)
+        live.configure(speech: speech, ai: settings, knowledge: knowledge)
         windowShortcut.answerPanel = answerPanel
+        windowShortcut.interviewPanel = interviewPanel
         answerPanel.hideMainWindow = { [weak windowShortcut] in windowShortcut?.window?.orderOut(nil) }
-        screenQuestions.showFloatingAnswer = { [weak answerPanel] in answerPanel?.enable() }
-        screenQuestions.returnToMainWindow = { [weak answerPanel, weak windowShortcut] in
+        interviewPanel.hideMainWindow = { [weak windowShortcut] in windowShortcut?.window?.orderOut(nil) }
+        interviewPanel.beforeEnable = { [weak answerPanel] in answerPanel?.disable() }
+        answerPanel.routeScroll = { [weak interviewPanel] direction in interviewPanel?.routeScroll(direction) ?? false }
+        live.showFloatingAnswer = { [weak interviewPanel] in interviewPanel?.enable() }
+        screenQuestions.showFloatingAnswer = { [weak answerPanel, weak interviewPanel] in
+            interviewPanel?.disable()
+            answerPanel?.enable()
+        }
+        interviewPanel.returnToMainWindow = { [weak interviewPanel, weak answerPanel, weak windowShortcut, weak presentation] in
+            interviewPanel?.disable()
             answerPanel?.disable()
+            presentation?.showInterview()
+            windowShortcut?.showMainWindow()
+        }
+        screenQuestions.returnToMainWindow = { [weak answerPanel, weak interviewPanel, weak windowShortcut, weak presentation] in
+            answerPanel?.disable()
+            interviewPanel?.disable()
+            presentation?.showingScreenQuestions = true
             windowShortcut?.showMainWindow()
         }
         do {
@@ -188,7 +226,9 @@ struct CopilotNativeApp: App {
                         speech: bootstrap.speech,
                         knowledge: bootstrap.knowledge,
                         screenQuestions: bootstrap.screenQuestions,
-                        openSettings: { bootstrap.settingsWindow.show() }
+                        openSettings: { bootstrap.settingsWindow.show() },
+                        live: bootstrap.live,
+                        presentation: bootstrap.presentation
                     )
                 } else {
                     ContentUnavailableView(
@@ -205,6 +245,13 @@ struct CopilotNativeApp: App {
                     bootstrap.screenQuestions.shutdown()
                     bootstrap.windowShortcut.shutdown()
                     bootstrap.answerPanel.shutdown()
+                    bootstrap.interviewPanel.shutdown()
+                    bootstrap.live.shutdown()
+                }
+                appDelegate.onReopen = {
+                    bootstrap.answerPanel.disable()
+                    bootstrap.interviewPanel.disable()
+                    bootstrap.windowShortcut.showMainWindow()
                 }
             }
             .onChange(of: excludeFromScreenSharing) {
@@ -233,8 +280,11 @@ struct CopilotNativeApp: App {
                 Button("显示／收起窗口（⌃⌥⌘Space）") { bootstrap.windowShortcut.toggle() }
                 Button("显示主窗口") {
                     bootstrap.answerPanel.disable()
+                    bootstrap.interviewPanel.disable()
                     bootstrap.windowShortcut.showMainWindow()
                 }
+                Button("实时面试浮窗（⌃⌥⌘I）") { bootstrap.interviewPanel.perform(.toggle) }
+                if let error = bootstrap.interviewPanel.shortcutError { Text(error) }
                 if let error = bootstrap.windowShortcut.error {
                     Text(error)
                 }

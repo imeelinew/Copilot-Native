@@ -39,6 +39,7 @@ targets:
     info:
       path: Support/Info.plist
       properties:
+        LSUIElement: true
         NSMicrophoneUsageDescription: 将面试语音实时转写，并根据本地资料生成回答。
         NSAudioCaptureUsageDescription: 识别会议应用中的面试问题，实时显示文字并生成回答。
         SUFeedURL: https://imeelinew.github.io/Copilot-Native/appcast.xml

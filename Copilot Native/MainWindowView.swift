@@ -49,9 +49,8 @@ struct MainWindowView: View {
     let screenQuestions: ScreenQuestionController
     let openSettings: () -> Void
 
-    @State private var live = LiveInterviewController()
-    @State private var showingLiveInterview = false
-    @State private var showingScreenQuestions = false
+    let live: LiveInterviewController
+    @Bindable var presentation: AppPresentation
     @State private var query = ""
     @State private var selectedScope: LibraryScope?
     @State private var expandedPackageIDs: Set<UUID> = []
@@ -99,9 +98,9 @@ struct MainWindowView: View {
             .navigationTitle("Copilot Native")
             .navigationSplitViewColumnWidth(min: 185, ideal: 220, max: 280)
         } detail: {
-            if showingScreenQuestions {
+            if presentation.showingScreenQuestions {
                 ScreenQuestionView(controller: screenQuestions)
-            } else if showingLiveInterview {
+            } else if presentation.showingLiveInterview {
                 LiveInterviewView(controller: live, speech: speech, settings: settings, knowledge: knowledge, openSettings: openSettings) { question, answer in
                     editor = .adding(question: question, answer: answer, capsuleID: library.preferredCapsuleID(for: selectedScope))
                 }
@@ -111,14 +110,14 @@ struct MainWindowView: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button { showingScreenQuestions.toggle() } label: {
-                    Label(showingScreenQuestions ? "返回" : "截图解题", systemImage: showingScreenQuestions ? "arrow.backward" : "viewfinder")
+                Button { presentation.showingScreenQuestions.toggle() } label: {
+                    Label(presentation.showingScreenQuestions ? "返回" : "截图解题", systemImage: presentation.showingScreenQuestions ? "arrow.backward" : "viewfinder")
                 }
                 .help("查看截图解答；截图 ⌃⌥⌘S，发送 ⌃⌥⌘Return")
             }
             ToolbarItem(placement: .primaryAction) {
-                Button { showingScreenQuestions = false; showingLiveInterview.toggle() } label: {
-                    Label(showingLiveInterview ? "返回题库" : live.isActive ? "实时面试 · 监听中" : "实时面试", systemImage: showingLiveInterview ? "text.book.closed" : "waveform")
+                Button { presentation.showingScreenQuestions = false; presentation.showingLiveInterview.toggle() } label: {
+                    Label(presentation.showingLiveInterview ? "返回题库" : live.isActive ? "实时面试 · 监听中" : "实时面试", systemImage: presentation.showingLiveInterview ? "text.book.closed" : "waveform")
                 }
             }
             ToolbarItem(placement: .primaryAction) {
@@ -130,8 +129,8 @@ struct MainWindowView: View {
                 .keyboardShortcut("n", modifiers: .command)
             }
         }
-        .sheet(item: $editor) { presentation in
-            QuestionEditorView(presentation: presentation, library: library) { savedID in
+        .sheet(item: $editor) { editorPresentation in
+            QuestionEditorView(presentation: editorPresentation, library: library) { savedID in
                 query = ""
                 selectedID = savedID
                 if let capsuleID = library.item(id: savedID)?.capsule?.id {
@@ -140,7 +139,7 @@ struct MainWindowView: View {
                         expandedPackageIDs.insert(packageID)
                     }
                 }
-                if showingLiveInterview { showingLiveInterview = false }
+                if presentation.showingLiveInterview { presentation.showingLiveInterview = false }
                 synchronizeSearch()
             }
         }
@@ -187,7 +186,7 @@ struct MainWindowView: View {
         .onReceive(NotificationCenter.default.publisher(for: .focusQuestionSearch)) { _ in
             searchFocused = true
         }
-        .onDisappear { ai.cancel(); live.shutdown() }
+        .onDisappear { ai.cancel() }
         .task { await knowledge.prepare() }
         .frame(minWidth: 900, minHeight: 580)
     }

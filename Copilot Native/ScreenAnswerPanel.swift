@@ -30,7 +30,7 @@ final class AnswerScrollProxy {
     }
 }
 
-private struct AnswerScrollBridge: NSViewRepresentable {
+struct AnswerScrollBridge: NSViewRepresentable {
     let proxy: AnswerScrollProxy
 
     func makeNSView(context: Context) -> Probe {
@@ -56,6 +56,7 @@ final class ScreenAnswerPanelController {
     private(set) var isEnabled = false
     private(set) var shortcutError: String?
     @ObservationIgnored var hideMainWindow: (() -> Void)?
+    @ObservationIgnored var routeScroll: ((Int) -> Bool)?
     @ObservationIgnored private let controller: ScreenQuestionController
     @ObservationIgnored let scroll = AnswerScrollProxy()
     @ObservationIgnored private var panel: ProtectedAnswerPanel?
@@ -75,7 +76,7 @@ final class ScreenAnswerPanelController {
                   identifier.signature == 0x4350414E, [1, 2].contains(identifier.id) else { return OSStatus(eventNotHandledErr) }
             MainActor.assumeIsolated {
                 let owner = Unmanaged<ScreenAnswerPanelController>.fromOpaque(context).takeUnretainedValue()
-                if owner.panel?.isVisible == true { owner.scroll.scroll(identifier.id == 1 ? -1 : 1) }
+                owner.handleScroll(identifier.id == 1 ? -1 : 1)
             }
             return noErr
         }, 1, &event, Unmanaged.passUnretained(self).toOpaque(), &handler)
@@ -84,6 +85,11 @@ final class ScreenAnswerPanelController {
         let up = RegisterEventHotKey(UInt32(kVK_UpArrow), modifiers, EventHotKeyID(signature: 0x4350414E, id: 1), GetApplicationEventTarget(), 0, &upHotKey)
         let down = RegisterEventHotKey(UInt32(kVK_DownArrow), modifiers, EventHotKeyID(signature: 0x4350414E, id: 2), GetApplicationEventTarget(), 0, &downHotKey)
         if up != noErr || down != noErr { shortcutError = "答案滚动快捷键 ⌃⌥⌘↑／↓ 被占用或无法注册" }
+    }
+
+    func handleScroll(_ direction: Int) {
+        if routeScroll?(direction) == true { return }
+        if isEnabled, panel?.isVisible == true { scroll.scroll(direction) }
     }
 
     /// Construct without ordering on screen, so capture policy precedes first display.
@@ -212,8 +218,9 @@ enum ScreenCapturePrivacy {
     }
 
     static func apply(to window: NSWindow) {
-        let protectedPanel = window.identifier?.rawValue == "screenshotAnswerPanel"
-            || window.parent?.identifier?.rawValue == "screenshotAnswerPanel"
+        let panelIDs = ["screenshotAnswerPanel", "liveInterviewAnswerPanel"]
+        let protectedPanel = panelIDs.contains(window.identifier?.rawValue ?? "")
+            || panelIDs.contains(window.parent?.identifier?.rawValue ?? "")
         let sharingType: NSWindow.SharingType = (isEnabled || protectedPanel) ? .none : .readOnly
         if window.sharingType != sharingType {
             window.sharingType = sharingType

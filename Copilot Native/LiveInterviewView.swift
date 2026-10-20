@@ -49,6 +49,9 @@ struct LiveInterviewView: View {
             HStack {
                 Text("实时面试").font(.headline)
                 Spacer()
+                Button { controller.showFloatingAnswer?() } label: { Image(systemName: "rectangle.on.rectangle") }
+                    .help("不抢焦点的悬浮答案 · ⌃⌥⌘I")
+                    .accessibilityLabel("悬浮面试答案")
                 Button { showingSpeechSettings = true } label: { Image(systemName: "gearshape") }
                     .help("语音识别设置")
                     .accessibilityLabel("语音识别设置")
@@ -83,6 +86,10 @@ struct LiveInterviewView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             InterviewKnowledgeControls(knowledge: knowledge)
+            DisclosureGroup("全局快捷键（其他应用内也可用）") {
+                Text(LiveInterviewPanelController.shortcutHelp)
+                    .font(.caption).frame(maxWidth: .infinity, alignment: .leading)
+            }
             HStack {
                 Button {
                     if controller.isActive { controller.stop() }
@@ -149,6 +156,7 @@ struct LiveInterviewView: View {
         return VStack(alignment: .leading, spacing: 8) {
             Toggle("自动生成回答", isOn: $speech.automaticAnswers)
                 .toggleStyle(.switch).controlSize(.small)
+                .onChange(of: speech.automaticAnswers) { controller.automaticAnswersChanged() }
             if speech.automaticAnswers {
                 Text(controller.questionAnalysisStatus).font(.caption).foregroundStyle(.secondary)
             }

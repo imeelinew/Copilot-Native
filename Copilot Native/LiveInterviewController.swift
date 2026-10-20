@@ -40,6 +40,7 @@ final class LiveInterviewController {
     var selectedTurnID: UUID?
     var questionEdit = ""
     var isEditing = false
+    @ObservationIgnored var showFloatingAnswer: (() -> Void)?
     @ObservationIgnored private var sessionTask: Task<Void, Never>?
     @ObservationIgnored private var answerTask: Task<Void, Never>?
     @ObservationIgnored private var settlementID = UUID()
@@ -65,6 +66,35 @@ final class LiveInterviewController {
         }
     }
     var selectedTurn: InterviewTurn? { turns.first { $0.id == selectedTurnID } ?? turns.last }
+    var selectedIndex: Int? { selectedTurn.flatMap { selected in turns.firstIndex { $0.id == selected.id } } }
+    var canSelectPrevious: Bool { (selectedIndex ?? 0) > 0 }
+    var canSelectNext: Bool { selectedIndex.map { $0 + 1 < turns.count } ?? false }
+    var hasPendingQuestion: Bool {
+        !(isEditing ? questionEdit : draft).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    func selectTurn(offset: Int) {
+        guard let index = selectedIndex else { return }
+        selectedTurnID = turns[min(turns.count - 1, max(0, index + offset))].id
+    }
+
+    func toggleListening() {
+        if isActive { stop(); return }
+        guard let speechSettings, let aiSettings, let knowledge else {
+            notice = "请先在主窗口完成实时面试设置"
+            return
+        }
+        start(source: source, applicationID: applicationID.isEmpty ? nil : applicationID,
+              speech: speechSettings, ai: aiSettings, knowledge: knowledge)
+    }
+
+    func automaticAnswersChanged() {
+        settlementID = UUID()
+        settlementTask?.cancel()
+        settlementTask = nil
+        if speechSettings?.automaticAnswers == true { scheduleSubmission() }
+        else { questionAnalysisStatus = "自动回答已暂停，可按 ⌃⌥⌘A 手动提交" }
+    }
 
     func configure(speech: SpeechSettings, ai: RemoteAISettings, knowledge: InterviewKnowledgeBase) {
         self.speechSettings = speech
