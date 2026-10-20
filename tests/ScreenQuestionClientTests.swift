@@ -32,6 +32,14 @@ private final class StubProtocol: URLProtocol, @unchecked Sendable {
 
 @main
 struct ScreenQuestionClientTests {
+    static func checkSeparateExplanation(_ answer: String) {
+        guard let solution = answer.range(of: "## 解题答案"), let explanation = answer.range(of: "## 代码怎么讲") else {
+            preconditionFailure("Code answers must have separate solution and explanation sections")
+        }
+        precondition(solution.lowerBound < explanation.lowerBound)
+        let spoken = answer[explanation.upperBound...]
+        precondition(spoken.count > 40 && !spoken.contains("```"), "Explanation must use words, not repeat a code block")
+    }
     @MainActor
     final class BatchProbe {
         var sent: [[[Data]]] = []
@@ -163,6 +171,11 @@ struct ScreenQuestionClientTests {
         controller.enqueueRepair(displayID: 2)
         try await waitUntil { probe.requests.count == 1 && !controller.isWorking && !controller.isCapturingRepair }
         precondition(controller.sessionID == session && controller.repairCount == 1)
+        precondition(controller.answerVersions == ["original code", "fixed code 1"])
+        controller.selectAnswer(offset: -1)
+        precondition(controller.displayedAnswer == "original code" && controller.displayedAnswerTitle == "原始解答")
+        controller.selectAnswer(offset: -1)
+        precondition(controller.viewingAnswerIndex == 0)
         precondition(controller.pendingShots == [[Data([9])]], "Repair must not consume queued question screenshots")
         precondition(probe.requests[0].map(\.role) == ["user", "assistant", "user"])
         precondition(probe.requests[0][0].imageJPEGs == [Data([1])])
@@ -172,10 +185,16 @@ struct ScreenQuestionClientTests {
         try await waitUntil { probe.requests.count == 2 && !controller.isWorking && !controller.isCapturingRepair }
         precondition(probe.requests[1].count == 5 && probe.requests[1][3].content == "fixed code 1")
         precondition(controller.repairCount == 2)
+        precondition(controller.displayedAnswer == "fixed code 2" && controller.answerVersions.count == 3)
+        controller.selectAnswer(offset: -2)
+        precondition(controller.displayedAnswer == "original code")
+        controller.selectAnswer(offset: 1)
+        precondition(controller.displayedAnswer == "fixed code 1" && controller.displayedAnswerTitle == "第 1 次排错")
         probe.failNext = true
         controller.enqueueRepair(displayID: 4)
         try await waitUntil { probe.requests.count == 3 && !controller.isWorking && !controller.isCapturingRepair }
         precondition(controller.answer == "fixed code 2" && controller.repairCount == 2 && controller.sessionID == session)
+        precondition(controller.answerVersions.count == 3 && controller.displayedAnswer == "fixed code 2")
         controller.enqueueRepair(displayID: 5)
         try await waitUntil { probe.requests.count == 4 && !controller.isWorking && !controller.isCapturingRepair }
         precondition(probe.requests[3].count == 7 && !probe.requests[3].flatMap(\.imageJPEGs).contains(Data([4])))
@@ -183,10 +202,13 @@ struct ScreenQuestionClientTests {
         probe.holdNext = true
         controller.enqueueRepair(displayID: 6)
         try await waitUntil { probe.continuation != nil }
+        controller.selectAnswer(offset: -controller.viewingAnswerIndex)
+        precondition(controller.displayedAnswer == "original code", "Original answer must remain readable while a repair is streaming")
         controller.clearPending()
         precondition(controller.isWorking && controller.sessionID == session)
         controller.cancel()
         precondition(controller.answer == "fixed code 4" && controller.repairCount == 3 && controller.pendingCount == 0)
+        precondition(controller.answerVersions.count == 4 && controller.displayedAnswer == "original code")
         probe.continuation = nil
         controller.enqueueRepair(displayID: 7)
         try await waitUntil { probe.requests.count == 6 && !controller.isWorking && !controller.isCapturingRepair }
@@ -196,6 +218,7 @@ struct ScreenQuestionClientTests {
         controller.sendPending()
         try await waitUntil { controller.sessionID != session && !controller.isWorking }
         precondition(controller.repairCount == 0)
+        precondition(controller.answerVersions == ["original code"] && controller.selectedAnswerIndex == nil)
         controller.enqueueRepair(displayID: 11)
         try await waitUntil { probe.requests.count == 7 && !controller.isWorking && !controller.isCapturingRepair }
         precondition(probe.requests[6].count == 3 && probe.requests[6][0].imageJPEGs == [Data([10])])
@@ -206,6 +229,11 @@ struct ScreenQuestionClientTests {
     @MainActor
     static func testProtectedPanel() async throws {
         _ = NSApplication.shared
+        let parts = ScreenshotAnswerParts("## 解题答案\n```python\n## 代码怎么讲\nprint('keep this in code')\n```\n## 代码怎么讲\n先读取输入，再计算结果。")
+        precondition(parts.solution.contains("## 代码怎么讲") && parts.solution.contains("print("))
+        precondition(parts.explanation == "先读取输入，再计算结果。")
+        precondition(ScreenshotAnswerParts("旧版没有分区标题的回答").solution == "旧版没有分区标题的回答")
+        precondition(ScreenshotAnswerParts("## 解题答案\n正在写代码\n## 代码怎").explanation.isEmpty)
         let suiteName = UUID().uuidString
         let defaults = UserDefaults(suiteName: suiteName)!
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -215,7 +243,7 @@ struct ScreenQuestionClientTests {
         try settings.save(defaults: defaults, saveKey: { _ in })
         let controller = ScreenQuestionController(settings: settings, registerShortcuts: false, captureImages: { _ in [Data([1])] }, answerStream: { _, _ in
             AsyncThrowingStream { continuation in
-                continuation.yield("## 解题思路\n\n保留最新请求的结果，并取消旧请求。\n\n```typescript\nconst controller = new AbortController();\nawait fetch('/api/search', { signal: controller.signal });\n```\n\n" + String(repeating: "补充说明：输入焦点保留在浏览器，答案可以独立滚动。\n\n", count: 50))
+                continuation.yield("## 解题答案\n\n保留最新请求的结果，并取消旧请求。\n\n```typescript\nconst controller = new AbortController();\nawait fetch('/api/search', { signal: controller.signal });\n```\n\n" + String(repeating: "填写说明：把这段代码放到请求处理函数中。\n\n", count: 30) + "## 代码怎么讲\n\n" + String(repeating: "我的思路是先取消上一次请求，再显示最新一次请求的结果，避免旧结果覆盖新结果。\n\n", count: 30))
                 continuation.finish()
             }
         })
@@ -244,9 +272,17 @@ struct ScreenQuestionClientTests {
         try await Task.sleep(for: .milliseconds(100))
         panel.contentView?.layoutSubtreeIfNeeded()
         precondition(owner.scroll.view != nil, "Native scroll bridge must attach to the actual answer scroll view")
+        precondition(owner.explanationScroll.view != nil && owner.explanationScroll.view !== owner.scroll.view,
+                     "Solution and explanation must have separate native scroll views")
         owner.scroll.scroll(1)
         precondition(owner.scroll.view!.contentView.bounds.minY > 0, "Actual answer must scroll")
+        precondition(owner.explanationScroll.view!.contentView.bounds.minY == 0)
+        let answerOffset = owner.scroll.view!.contentView.bounds.minY
+        owner.explanationScroll.scroll(1)
+        precondition(owner.explanationScroll.view!.contentView.bounds.minY > 0 && owner.scroll.view!.contentView.bounds.minY == answerOffset,
+                     "Scrolling the explanation must not move the solution")
         owner.scroll.reset()
+        owner.explanationScroll.reset()
         if let view = panel.contentView, let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
             view.cacheDisplay(in: view.bounds, to: bitmap)
             try bitmap.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: "/tmp/copilot-answer-panel-preview.png"))
@@ -450,6 +486,7 @@ struct ScreenQuestionClientTests {
                 .init(role: "user", content: "这是同一道题的排错截图。代码按你上一轮答案填写，点击按钮后报错。请结合原题和之前的代码明确指出改哪里，给最小修复，保留原题的计数要求。", imageJPEGs: [error])
             ]
             let answer = try await collect(ChatCompletionClient().streamScreenshotConversation(messages: messages, configuration: live))
+            checkSeparateExplanation(answer)
             precondition(answer.contains("currentCount") && answer.contains("App.jsx") && answer.contains("2"))
             print("PASS: live repair retains original image requirement and previous code, locates error in a later screenshot\n" + answer)
         }
@@ -477,6 +514,7 @@ struct ScreenQuestionClientTests {
                 image.unlockFocus()
                 let jpeg = NSBitmapImageRep(data: image.tiffRepresentation!)!.representation(using: .jpeg, properties: [.compressionFactor: 0.9])!
                 let answer = try await collect(ChatCompletionClient().streamScreenshotAnswer(imageJPEGs: [jpeg], configuration: live, screenshotImageCounts: [1]))
+                checkSeparateExplanation(answer)
                 guard let fence = answer.range(of: "```") else { preconditionFailure("Missing answer code") }
                 let guidance = String(answer[..<fence.lowerBound])
                 precondition(guidance.count > 30, "Writing guidance must precede code")

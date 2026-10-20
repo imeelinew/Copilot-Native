@@ -59,6 +59,8 @@ final class ScreenAnswerPanelController {
     @ObservationIgnored var routeScroll: ((Int) -> Bool)?
     @ObservationIgnored private let controller: ScreenQuestionController
     @ObservationIgnored let scroll = AnswerScrollProxy()
+    @ObservationIgnored let explanationScroll = AnswerScrollProxy()
+    var scrollingExplanation = false
     @ObservationIgnored private var panel: ProtectedAnswerPanel?
     @ObservationIgnored private var upHotKey: EventHotKeyRef?
     @ObservationIgnored private var downHotKey: EventHotKeyRef?
@@ -89,13 +91,13 @@ final class ScreenAnswerPanelController {
 
     func handleScroll(_ direction: Int) {
         if routeScroll?(direction) == true { return }
-        if isEnabled, panel?.isVisible == true { scroll.scroll(direction) }
+        if isEnabled, panel?.isVisible == true { (scrollingExplanation ? explanationScroll : scroll).scroll(direction) }
     }
 
     /// Construct without ordering on screen, so capture policy precedes first display.
     func preparePanel() -> ProtectedAnswerPanel {
         if let panel { return panel }
-        let panel = ProtectedAnswerPanel(contentRect: NSRect(x: 0, y: 0, width: 430, height: 650),
+        let panel = ProtectedAnswerPanel(contentRect: NSRect(x: 0, y: 0, width: 430, height: 900),
                                          styleMask: [.titled, .closable, .resizable, .nonactivatingPanel, .utilityWindow],
                                          backing: .buffered, defer: false)
         panel.identifier = NSUserInterfaceItemIdentifier("screenshotAnswerPanel")
@@ -108,13 +110,13 @@ final class ScreenAnswerPanelController {
         panel.isReleasedWhenClosed = false
         panel.animationBehavior = .none
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        panel.minSize = NSSize(width: 320, height: 280)
-        panel.setFrameAutosaveName("ScreenshotAnswerPanel")
-        if !panel.setFrameUsingName("ScreenshotAnswerPanel") {
+        panel.minSize = NSSize(width: 320, height: 480)
+        panel.setFrameAutosaveName("ScreenshotAnswerPanelSplit")
+        if !panel.setFrameUsingName("ScreenshotAnswerPanelSplit") {
             let pointer = NSEvent.mouseLocation
             if let screen = NSScreen.screens.first(where: { $0.frame.contains(pointer) }) ?? NSScreen.main {
                 let area = screen.visibleFrame.insetBy(dx: 16, dy: 16)
-                let size = NSSize(width: min(430, area.width), height: min(650, area.height))
+                let size = NSSize(width: min(430, area.width), height: area.height)
                 panel.setFrame(NSRect(x: area.maxX - size.width, y: area.maxY - size.height, width: size.width, height: size.height), display: false)
             }
         }
@@ -184,29 +186,94 @@ private struct FloatingScreenshotAnswer: View {
             .buttonStyle(.borderless)
             .padding(12)
             Divider()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(controller.status).font(.caption).foregroundStyle(.secondary)
-                    if let error = controller.captureError { Text(error).font(.caption).foregroundStyle(.red) }
-                    if let error = controller.shortcutError { Text(error).font(.caption).foregroundStyle(.red) }
-                    if let error = owner.shortcutError { Text(error).font(.caption).foregroundStyle(.red) }
-                    if controller.answer.isEmpty {
-                        Text("截图答案会显示在这里。你可以继续在浏览器或笔记中输入。")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        MarkdownDocumentView(markdown: controller.answer)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(16)
-                .background(AnswerScrollBridge(proxy: owner.scroll))
+            ScreenshotAnswerNavigation(controller: controller).padding(.horizontal, 12).padding(.vertical, 6)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(controller.status).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                if let error = controller.captureError { Text(error).font(.caption).foregroundStyle(.red) }
+                if let error = controller.shortcutError { Text(error).font(.caption).foregroundStyle(.red) }
+                if let error = owner.shortcutError { Text(error).font(.caption).foregroundStyle(.red) }
             }
+            .padding(.horizontal, 12).padding(.bottom, 6)
+            ScreenshotAnswerSections(markdown: controller.displayedAnswer, isWorking: controller.isWorking, owner: owner)
             Divider()
             Text("⌃⌥⌘Space 显隐 · ⌃⌥⌘↑／↓ 滚动\n⌃⌥⌘S 全屏 · ⌃⌥⌘4 区域 · ⌃⌥⌘Return 发送\n⌃⌥⌘⌫ 清空待发送截图 · ⌃⌥⌘E 截图排错")
                 .font(.caption).foregroundStyle(.secondary).padding(10)
         }
         .background(Color(nsColor: .windowBackgroundColor))
-        .onChange(of: controller.isWorking) { _, working in if working { owner.scroll.reset() } }
+        .onChange(of: controller.isWorking) { _, working in if working { owner.scroll.reset(); owner.explanationScroll.reset() } }
+        .onChange(of: controller.selectedAnswerIndex) { _, _ in owner.scroll.reset(); owner.explanationScroll.reset() }
+    }
+}
+
+struct ScreenshotAnswerParts: Equatable {
+    let solution: String
+    let explanation: String
+
+    init(_ markdown: String) {
+        var solutionLines: [String] = []
+        var explanationLines: [String] = []
+        var inExplanation = false
+        var fence: String?
+        for line in markdown.components(separatedBy: .newlines) {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~") {
+                let marker = String(trimmed.prefix(3))
+                if fence == nil { fence = marker }
+                else if fence == marker { fence = nil }
+            } else if fence == nil {
+                if !inExplanation && trimmed == "## 代码怎么讲" { inExplanation = true; continue }
+                if !inExplanation && trimmed == "## 解题答案" { continue }
+            }
+            if inExplanation { explanationLines.append(line) }
+            else { solutionLines.append(line) }
+        }
+        solution = solutionLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        explanation = explanationLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+struct ScreenshotAnswerSections: View {
+    let markdown: String
+    let isWorking: Bool
+    var owner: ScreenAnswerPanelController? = nil
+
+    var body: some View {
+        let parts = ScreenshotAnswerParts(markdown)
+        VSplitView {
+            section(title: "解题答案", text: parts.solution, explanation: false,
+                    placeholder: "解题代码和填写步骤会显示在这里。")
+            section(title: "代码怎么讲", text: parts.explanation, explanation: true,
+                    placeholder: isWorking ? "讲解生成后会显示在这里。" : "本轮暂无代码讲解。")
+        }
+    }
+
+    private func section(title: String, text: String, explanation: Bool, placeholder: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text(title).font(.headline)
+                Spacer()
+                if let owner {
+                    Button(owner.scrollingExplanation == explanation ? "⌃⌥⌘↑／↓" : "快捷键滚动此区") {
+                        owner.scrollingExplanation = explanation
+                    }
+                    .font(.caption).buttonStyle(.borderless)
+                    .help("让上下滚动快捷键控制“\(title)”区域，不切换输入焦点")
+                }
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            Divider()
+            ScrollView {
+                VStack(alignment: .leading) {
+                    if text.isEmpty { Text(placeholder).foregroundStyle(.secondary) }
+                    else { MarkdownDocumentView(markdown: text) }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading).padding(12)
+                .background {
+                    if let owner { AnswerScrollBridge(proxy: explanation ? owner.explanationScroll : owner.scroll) }
+                }
+            }
+        }
+        .frame(minHeight: 100, maxHeight: .infinity)
     }
 }
 

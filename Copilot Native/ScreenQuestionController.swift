@@ -20,6 +20,24 @@ final class ScreenQuestionController {
     @ObservationIgnored var showFloatingAnswer: (() -> Void)?
     @ObservationIgnored var returnToMainWindow: (() -> Void)?
     private(set) var answer = ""
+    private(set) var selectedAnswerIndex: Int?
+    var answerVersions: [String] { history.filter { $0.role == "assistant" }.map(\.content) }
+    var answerVersionCount: Int { answerVersions.count + (isWorking ? 1 : 0) }
+    var viewingAnswerIndex: Int { selectedAnswerIndex ?? max(0, answerVersionCount - 1) }
+    var displayedAnswer: String {
+        if let selectedAnswerIndex, answerVersions.indices.contains(selectedAnswerIndex) { return answerVersions[selectedAnswerIndex] }
+        return answer
+    }
+    var displayedAnswerTitle: String {
+        if isWorking && selectedAnswerIndex == nil { return requestIsRepair ? "第 \(repairCount + 1) 次排错 · 生成中" : "新题解答 · 生成中" }
+        return viewingAnswerIndex == 0 ? "原始解答" : "第 \(viewingAnswerIndex) 次排错"
+    }
+
+    func selectAnswer(offset: Int) {
+        guard answerVersionCount > 0 else { return }
+        let index = min(answerVersionCount - 1, max(0, viewingAnswerIndex + offset))
+        selectedAnswerIndex = index == answerVersionCount - 1 ? nil : index
+    }
     private(set) var status = "按 ⌃⌥⌘S 累积截图，按 ⌃⌥⌘Return 一起发送解题"
     private(set) var isWorking = false
     private(set) var shortcutError: String?
@@ -40,7 +58,7 @@ final class ScreenQuestionController {
     @ObservationIgnored private let regionSelector = RegionScreenshotSelector()
     @ObservationIgnored private var regionRequestID = UUID()
     @ObservationIgnored private var regionCapturePending = false
-    @ObservationIgnored private var history: [ScreenshotConversationMessage] = []
+    private var history: [ScreenshotConversationMessage] = []
     @ObservationIgnored private var repairGeneration = UUID()
     @ObservationIgnored private var requestIsRepair = false
     @ObservationIgnored private var answerBeforeRequest = ""
@@ -137,6 +155,7 @@ final class ScreenQuestionController {
         regionHotKey = nil
         handler = nil
         history = []
+        selectedAnswerIndex = nil
         sessionID = nil
     }
 
@@ -335,6 +354,7 @@ final class ScreenQuestionController {
         generation = token
         requestIsRepair = isRepair
         answerBeforeRequest = answer
+        selectedAnswerIndex = nil
         answer = ""
         isWorking = true
         status = isRepair ? "正在沿本题对话排错（第 \(repairCount + 1) 次）…" : "正在合并 \(shots.count) 张截图并解答…"
@@ -352,7 +372,7 @@ final class ScreenQuestionController {
                 guard !answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw AIClientError.emptyAnswer }
                 history = context + [ScreenshotConversationMessage(role: "assistant", content: answer)]
                 if isRepair { repairCount += 1 }
-                else { sessionID = UUID(); repairCount = 0 }
+                else { sessionID = UUID(); repairCount = 0; selectedAnswerIndex = nil }
                 inFlight = []
                 status = isRepair ? "第 \(repairCount) 次排错完成，可继续按 ⌃⌥⌘E 跟进" : "解答完成，可按 ⌃⌥⌘E 截图排错"
             } catch {
@@ -468,10 +488,9 @@ struct ScreenQuestionView: View {
             if let error = controller.captureError {
                 Text(error).foregroundStyle(.red)
             }
-            ScrollView {
-                MarkdownDocumentView(markdown: controller.answer)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            ScreenshotAnswerNavigation(controller: controller)
+            ScreenshotAnswerSections(markdown: controller.displayedAnswer, isWorking: controller.isWorking)
+            .id(controller.selectedAnswerIndex)
             HStack {
                 Text("全屏 \(ScreenQuestionController.shortcut) · 区域 \(ScreenQuestionController.regionShortcut) · 发送 \(ScreenQuestionController.sendShortcut) · 清空 \(ScreenQuestionController.clearShortcut)")
                 Spacer()
@@ -488,5 +507,29 @@ struct ScreenQuestionView: View {
         }
         .padding(24)
         .navigationTitle("截图解题")
+    }
+}
+
+struct ScreenshotAnswerNavigation: View {
+    let controller: ScreenQuestionController
+
+    var body: some View {
+        if controller.answerVersionCount > 0 {
+            HStack {
+                Button { controller.selectAnswer(offset: -1) } label: { Image(systemName: "chevron.left") }
+                    .accessibilityLabel("上一轮截图回答")
+                    .disabled(controller.viewingAnswerIndex == 0)
+                Text(controller.displayedAnswerTitle).font(.caption)
+                Text("\(controller.viewingAnswerIndex + 1) / \(controller.answerVersionCount)").font(.caption).foregroundStyle(.secondary)
+                Button { controller.selectAnswer(offset: 1) } label: { Image(systemName: "chevron.right") }
+                    .accessibilityLabel("下一轮截图回答")
+                    .disabled(controller.viewingAnswerIndex >= controller.answerVersionCount - 1)
+                Spacer()
+                if controller.viewingAnswerIndex > 0 {
+                    Button("回到原始解答") { controller.selectAnswer(offset: -controller.viewingAnswerIndex) }
+                }
+            }
+            .buttonStyle(.borderless)
+        }
     }
 }
