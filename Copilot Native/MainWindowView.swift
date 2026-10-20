@@ -113,7 +113,7 @@ struct MainWindowView: View {
                 Button { presentation.showingScreenQuestions.toggle() } label: {
                     Label(presentation.showingScreenQuestions ? "返回" : "截图解题", systemImage: presentation.showingScreenQuestions ? "arrow.backward" : "viewfinder")
                 }
-                .help("查看截图解答；截图 ⌃⌥⌘S，发送 ⌃⌥⌘Return")
+                .help("查看截图解答；全屏 ⌃⌥⌘S，区域 ⌃⌥⌘4，发送 ⌃⌥⌘Return")
             }
             ToolbarItem(placement: .primaryAction) {
                 Button { presentation.showingScreenQuestions = false; presentation.showingLiveInterview.toggle() } label: {

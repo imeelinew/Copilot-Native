@@ -172,6 +172,8 @@ private struct FloatingScreenshotAnswer: View {
             HStack {
                 Text("待发送 \(controller.pendingCount) 张 · 排错 \(controller.repairCount) 次").foregroundStyle(.secondary)
                 Spacer()
+                Button { controller.captureRegionScreenshot() } label: { Image(systemName: "crop") }
+                    .help("区域截图 · ⌃⌥⌘4").accessibilityLabel("区域截图")
                 Button("排错") { controller.captureErrorScreenshot() }
                     .disabled(!controller.hasSession || controller.isWorking || controller.isCapturingRepair)
                     .help("⌃⌥⌘E：截图报错并沿本题对话修复")
@@ -200,7 +202,7 @@ private struct FloatingScreenshotAnswer: View {
                 .background(AnswerScrollBridge(proxy: owner.scroll))
             }
             Divider()
-            Text("⌃⌥⌘Space 显隐 · ⌃⌥⌘↑／↓ 滚动\n⌃⌥⌘⌫ 清空待发送截图 · ⌃⌥⌘E 截图排错")
+            Text("⌃⌥⌘Space 显隐 · ⌃⌥⌘↑／↓ 滚动\n⌃⌥⌘S 全屏 · ⌃⌥⌘4 区域 · ⌃⌥⌘Return 发送\n⌃⌥⌘⌫ 清空待发送截图 · ⌃⌥⌘E 截图排错")
                 .font(.caption).foregroundStyle(.secondary).padding(10)
         }
         .background(Color(nsColor: .windowBackgroundColor))
@@ -218,7 +220,7 @@ enum ScreenCapturePrivacy {
     }
 
     static func apply(to window: NSWindow) {
-        let panelIDs = ["screenshotAnswerPanel", "liveInterviewAnswerPanel"]
+        let panelIDs = ["screenshotAnswerPanel", "liveInterviewAnswerPanel", "regionScreenshotSelector"]
         let protectedPanel = panelIDs.contains(window.identifier?.rawValue ?? "")
             || panelIDs.contains(window.parent?.identifier?.rawValue ?? "")
         let sharingType: NSWindow.SharingType = (isEnabled || protectedPanel) ? .none : .readOnly

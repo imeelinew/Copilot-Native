@@ -264,6 +264,115 @@ struct ScreenQuestionClientTests {
     }
 
     @MainActor
+    final class RegionProbe {
+        var selection: CheckedContinuation<ScreenCaptureRegion?, Never>?
+        var sent: [[[Data]]] = []
+        var captured: [CGDirectDisplayID] = []
+    }
+
+    @MainActor
+    static func testRegionCapture() async throws {
+        let suite = "region-capture-tests-" + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let settings = RemoteAISettings(defaults: defaults, loadKey: { "test" })
+        settings.endpointText = "https://example.com/chat/completions"
+        settings.modelText = "test"
+        try settings.save(defaults: defaults, saveKey: { _ in })
+        let probe = RegionProbe()
+        let controller = ScreenQuestionController(settings: settings, registerShortcuts: false,
+            captureImages: { [Data([UInt8($0)])] }, captureRegionImages: { region in
+                probe.captured.append(region.displayID)
+                if region.displayID == 99 { throw AIClientError.invalidResponse }
+                return [Data([UInt8(region.displayID)])]
+            }, answerStream: { shots, _ in AsyncThrowingStream { continuation in
+                Task { @MainActor in probe.sent.append(shots); continuation.yield("answer"); continuation.finish() }
+            } })
+        defer { controller.shutdown() }
+        let size = CGSize(width: 1440, height: 900)
+        func region(_ id: CGDirectDisplayID) -> ScreenCaptureRegion {
+            .init(displayID: id, displaySize: size, rect: CGRect(x: 100, y: 200, width: 300, height: 150))
+        }
+        controller.enqueueCapture(displayID: 1)
+        controller.enqueueRegionCapture { await withCheckedContinuation { probe.selection = $0 } }
+        controller.sendPending()
+        controller.enqueueCapture(displayID: 3)
+        try await waitUntil { probe.selection != nil }
+        precondition(probe.sent.isEmpty && controller.pendingCount == 3)
+        probe.selection?.resume(returning: region(2)); probe.selection = nil
+        try await waitUntil { probe.sent.count == 1 && !controller.isWorking && controller.pendingShots.count == 1 }
+        precondition(probe.sent[0] == [[Data([1])], [Data([2])]])
+        precondition(controller.pendingShots == [[Data([3])]])
+        controller.enqueueRegionCapture { nil }
+        try await waitUntil { !controller.isSelectingRegion && controller.pendingCaptureCount == 0 }
+        precondition(controller.pendingShots == [[Data([3])]])
+        controller.enqueueRegionCapture { await withCheckedContinuation { probe.selection = $0 } }
+        try await waitUntil { probe.selection != nil }
+        controller.cancelRegionSelection()
+        probe.selection?.resume(returning: region(4)); probe.selection = nil
+        try await waitUntil { controller.pendingCaptureCount == 0 }
+        precondition(!probe.captured.contains(4) && controller.pendingShots == [[Data([3])]])
+        controller.enqueueRegionCapture { await withCheckedContinuation { probe.selection = $0 } }
+        try await waitUntil { probe.selection != nil }
+        controller.enqueueCapture(displayID: 5)
+        controller.clearPending()
+        probe.selection?.resume(returning: region(6)); probe.selection = nil
+        try await waitUntil { controller.pendingCount == 0 }
+        controller.enqueueRegionCapture { region(7) }
+        try await waitUntil { controller.pendingShots.count == 1 }
+        precondition(controller.pendingShots == [[Data([7])]] && !probe.captured.contains(6))
+        controller.enqueueRegionCapture { region(99) }
+        try await waitUntil { controller.captureError != nil && controller.pendingCaptureCount == 0 }
+        precondition(controller.pendingShots == [[Data([7])]])
+        controller.clearPending()
+        for id in 10..<16 { controller.enqueueCapture(displayID: CGDirectDisplayID(id)) }
+        var opened = false
+        controller.enqueueRegionCapture { opened = true; return region(17) }
+        try await waitUntil { controller.pendingCaptureCount == 0 }
+        precondition(!opened && controller.pendingShots.count == 6 && !controller.isSelectingRegion)
+
+        let config = try ScreenQuestionController.captureConfiguration(pixelSize: CGSize(width: 2880, height: 1800), displaySize: size, region: region(2))
+        precondition(config.sourceRect == region(2).rect && config.width == 600 && config.height == 300 && !config.showsCursor)
+        let full = try ScreenQuestionController.captureConfiguration(pixelSize: CGSize(width: 2880, height: 1800), displaySize: size, region: nil)
+        precondition(full.width == 2880 && full.height == 1800)
+        let clipped = ScreenCaptureRegion(displayID: 1, displaySize: size, rect: CGRect(x: -10, y: -20, width: 200, height: 100))
+        let clipConfig = try ScreenQuestionController.captureConfiguration(pixelSize: CGSize(width: 2880, height: 1800), displaySize: size, region: clipped)
+        precondition(clipConfig.sourceRect == CGRect(x: 0, y: 0, width: 190, height: 80))
+        precondition(clipConfig.width == 380 && clipConfig.height == 160)
+        let reverse = ScreenCaptureRegion.rectangle(from: CGPoint(x: 400, y: 300), to: CGPoint(x: 100, y: 100), bounds: CGRect(x: 0, y: 0, width: 1440, height: 900))
+        precondition(reverse == CGRect(x: 100, y: 100, width: 300, height: 200))
+        let bigSize = CGSize(width: 3840, height: 2160)
+        let bigRegion = ScreenCaptureRegion(displayID: 1, displaySize: bigSize, rect: CGRect(origin: .zero, size: bigSize))
+        let bigConfig = try ScreenQuestionController.captureConfiguration(pixelSize: CGSize(width: 7680, height: 4320), displaySize: bigSize, region: bigRegion)
+        precondition(bigConfig.width == 4096 && bigConfig.height == 2304)
+        do {
+            _ = try ScreenQuestionController.captureConfiguration(pixelSize: size, displaySize: CGSize(width: 1920, height: 1080), region: region(2))
+            preconditionFailure("Changed display size must reject old selection")
+        } catch { }
+        do {
+            let outside = ScreenCaptureRegion(displayID: 1, displaySize: size, rect: CGRect(x: 2000, y: 0, width: 100, height: 100))
+            _ = try ScreenQuestionController.captureConfiguration(pixelSize: size, displaySize: size, region: outside)
+            preconditionFailure("Outside selection must not capture full display")
+        } catch { }
+        _ = NSApplication.shared
+        let keyWindow = NSApp.keyWindow
+        let selector = RegionScreenshotSelector()
+        let panel = selector.preparePanel(frame: CGRect(x: -1440, y: 900, width: 1440, height: 900))
+        precondition(panel.sharingType == .none && !panel.isVisible && !panel.canBecomeKey && !panel.canBecomeMain)
+        precondition(panel.styleMask.contains(.nonactivatingPanel) && !panel.hasShadow)
+        precondition((panel.contentView as? RegionSelectionView)?.isFlipped == true)
+        let original = UserDefaults.standard.object(forKey: ScreenCapturePrivacy.defaultsKey)
+        UserDefaults.standard.set(false, forKey: ScreenCapturePrivacy.defaultsKey)
+        panel.sharingType = .readOnly
+        ScreenCapturePrivacy.applyToAllWindows()
+        precondition(panel.sharingType == .none && NSApp.keyWindow === keyWindow)
+        if let original { UserDefaults.standard.set(original, forKey: ScreenCapturePrivacy.defaultsKey) }
+        else { UserDefaults.standard.removeObject(forKey: ScreenCapturePrivacy.defaultsKey) }
+        selector.cancel()
+        print("PASS: mixed region/fullscreen order, send boundary, cancel/clear/failure/capacity; Retina crop coordinates, bounds, output scale, changed display rejection; protected nonactivating selection overlay")
+    }
+
+    @MainActor
     static func main() async throws {
         let config = AIConfiguration(endpoint: URL(string: "https://api.deepseek.com/success")!, model: "deepseek-flash", apiKey: "test-key")
         let fixture = Data([0xff, 0xd8, 0xff, 0xd9])
@@ -304,6 +413,7 @@ struct ScreenQuestionClientTests {
         }
         print("PASS: image payload, multi-image, image/text streaming, HTTP failure, malformed/truncated/empty stream")
         try await testBatching()
+        try await testRegionCapture()
         try await testRepairSession()
         try await testProtectedPanel()
 

@@ -8,6 +8,7 @@ xcrun swiftc -swift-version 6 -parse-as-library \
   'Copilot Native/LiveInterviewController.swift' \
   'Copilot Native/LiveInterviewView.swift' \
   'Copilot Native/ScreenQuestionController.swift' \
+  'Copilot Native/RegionScreenshotSelector.swift' \
   'Copilot Native/ScreenAnswerPanel.swift' \
   'Copilot Native/MarkdownDocumentView.swift' \
   'Copilot Native/InterviewKnowledgeModels.swift' \

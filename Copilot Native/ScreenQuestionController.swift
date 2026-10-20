@@ -11,6 +11,8 @@ final class ScreenQuestionController {
     static let sendShortcut = "⌃⌥⌘Return"
     static let clearShortcut = "⌃⌥⌘⌫"
     static let debugShortcut = "⌃⌥⌘E"
+    static let regionShortcut = "⌃⌥⌘4"
+    private(set) var isSelectingRegion = false
     private(set) var sessionID: UUID?
     private(set) var repairCount = 0
     private(set) var isCapturingRepair = false
@@ -34,6 +36,10 @@ final class ScreenQuestionController {
     @ObservationIgnored private var sendHotKey: EventHotKeyRef?
     @ObservationIgnored private var clearHotKey: EventHotKeyRef?
     @ObservationIgnored private var debugHotKey: EventHotKeyRef?
+    @ObservationIgnored private var regionHotKey: EventHotKeyRef?
+    @ObservationIgnored private let regionSelector = RegionScreenshotSelector()
+    @ObservationIgnored private var regionRequestID = UUID()
+    @ObservationIgnored private var regionCapturePending = false
     @ObservationIgnored private var history: [ScreenshotConversationMessage] = []
     @ObservationIgnored private var repairGeneration = UUID()
     @ObservationIgnored private var requestIsRepair = false
@@ -42,10 +48,12 @@ final class ScreenQuestionController {
     @ObservationIgnored private var handler: EventHandlerRef?
     @ObservationIgnored private var generation = UUID()
     @ObservationIgnored private let captureImages: @MainActor (CGDirectDisplayID) async throws -> [Data]
+    @ObservationIgnored private let captureRegionImages: @MainActor (ScreenCaptureRegion) async throws -> [Data]
     @ObservationIgnored private let answerStream: @Sendable ([[Data]], AIConfiguration) -> AsyncThrowingStream<String, Error>
 
     init(settings: RemoteAISettings, registerShortcuts: Bool = true,
          captureImages: (@MainActor (CGDirectDisplayID) async throws -> [Data])? = nil,
+         captureRegionImages: (@MainActor (ScreenCaptureRegion) async throws -> [Data])? = nil,
          answerStream: @escaping @Sendable ([[Data]], AIConfiguration) -> AsyncThrowingStream<String, Error> = {
              ChatCompletionClient().streamScreenshotAnswer(imageJPEGs: $0.flatMap { $0 }, configuration: $1, screenshotImageCounts: $0.map { $0.count })
          },
@@ -55,6 +63,7 @@ final class ScreenQuestionController {
         self.conversationStream = conversationStream
         self.settings = settings
         self.captureImages = captureImages ?? Self.capture
+        self.captureRegionImages = captureRegionImages ?? { try await Self.capture(displayID: $0.displayID, region: $0) }
         self.answerStream = answerStream
         guard registerShortcuts else { return }
         var event = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
@@ -63,13 +72,14 @@ final class ScreenQuestionController {
             var identifier = EventHotKeyID()
             guard GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil,
                                     MemoryLayout<EventHotKeyID>.size, nil, &identifier) == noErr,
-                  identifier.signature == 0x43505351, [1, 2, 3, 4].contains(identifier.id) else { return OSStatus(eventNotHandledErr) }
+                  identifier.signature == 0x43505351, [1, 2, 3, 4, 5].contains(identifier.id) else { return OSStatus(eventNotHandledErr) }
             MainActor.assumeIsolated {
                 let controller = Unmanaged<ScreenQuestionController>.fromOpaque(context).takeUnretainedValue()
                 if identifier.id == 1 { controller.captureScreenshot() }
                 else if identifier.id == 2 { controller.sendPending() }
                 else if identifier.id == 3 { controller.clearPending() }
-                else { controller.captureErrorScreenshot() }
+                else if identifier.id == 4 { controller.captureErrorScreenshot() }
+                else { controller.captureRegionScreenshot() }
             }
             return noErr
         }, 1, &event, Unmanaged.passUnretained(self).toOpaque(), &handler)
@@ -103,6 +113,11 @@ final class ScreenQuestionController {
         if debugRegistered != noErr {
             shortcutError = [shortcutError, "排错快捷键 ⌃⌥⌘E 注册失败（\(debugRegistered)）"].compactMap { $0 }.joined(separator: "；")
         }
+        let regionRegistered = RegisterEventHotKey(UInt32(kVK_ANSI_4), UInt32(controlKey | optionKey | cmdKey),
+                                                  EventHotKeyID(signature: 0x43505351, id: 5), GetApplicationEventTarget(), 0, &regionHotKey)
+        if regionRegistered != noErr {
+            shortcutError = [shortcutError, "区域截图快捷键 ⌃⌥⌘4 注册失败（\(regionRegistered)）"].compactMap { $0 }.joined(separator: "；")
+        }
     }
 
     func shutdown() {
@@ -113,17 +128,20 @@ final class ScreenQuestionController {
         if let sendHotKey { UnregisterEventHotKey(sendHotKey) }
         if let clearHotKey { UnregisterEventHotKey(clearHotKey) }
         if let debugHotKey { UnregisterEventHotKey(debugHotKey) }
+        if let regionHotKey { UnregisterEventHotKey(regionHotKey) }
         if let handler { RemoveEventHandler(handler) }
         hotKey = nil
         sendHotKey = nil
         clearHotKey = nil
         debugHotKey = nil
+        regionHotKey = nil
         handler = nil
         history = []
         sessionID = nil
     }
 
     func cancel() {
+        cancelRegionSelection()
         generation = UUID()
         repairGeneration = UUID()
         let wasCapturing = isCapturingRepair
@@ -142,6 +160,7 @@ final class ScreenQuestionController {
     }
 
     func clearPending() {
+        cancelRegionSelection()
         captureGeneration = UUID()
         pendingShots = []
         pendingCaptureCount = 0
@@ -151,6 +170,50 @@ final class ScreenQuestionController {
 
     func captureScreenshot() {
         if let displayID = currentDisplayID() { enqueueCapture(displayID: displayID) }
+    }
+
+    func captureRegionScreenshot() {
+        if isSelectingRegion { cancelRegionSelection(); return }
+        guard !regionCapturePending, let displayID = currentDisplayID(),
+              let screen = NSScreen.screens.first(where: {
+                  ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value == displayID
+              }) else { return }
+        enqueueRegionCapture { [regionSelector] in await regionSelector.select(on: screen) }
+    }
+
+    func cancelRegionSelection() {
+        let wasSelecting = isSelectingRegion
+        regionRequestID = UUID()
+        isSelectingRegion = false
+        regionCapturePending = false
+        regionSelector.cancel()
+        if wasSelecting, !isWorking { status = "已取消区域截图，原有截图已保留" }
+    }
+
+    /// Reserve the queue position before opening the selector, so send/clear retain
+    /// the same ordering guarantees as full-screen captures.
+    func enqueueRegionCapture(selection: @escaping @MainActor () async -> ScreenCaptureRegion?) {
+        guard !regionCapturePending else { return }
+        let request = UUID()
+        regionRequestID = request
+        regionCapturePending = true
+        isSelectingRegion = true
+        let accepted = enqueueShot(operation: { [self] in
+            guard regionRequestID == request else { return nil }
+            status = "拖拽框选区域，松开后累积；Esc / 右键取消"
+            let region = await selection()
+            guard regionRequestID == request else { return nil }
+            isSelectingRegion = false
+            guard let region else {
+                if !isWorking { status = "已取消区域截图，原有截图已保留" }
+                return nil
+            }
+            let images = try await captureRegionImages(region)
+            return regionRequestID == request ? images : nil
+        }, finished: { [self] in
+            if regionRequestID == request { isSelectingRegion = false; regionCapturePending = false }
+        })
+        if !accepted { isSelectingRegion = false; regionCapturePending = false }
     }
 
     func captureErrorScreenshot() {
@@ -207,20 +270,26 @@ final class ScreenQuestionController {
     }
 
     func enqueueCapture(displayID: CGDirectDisplayID) {
+        enqueueShot(operation: { [captureImages] in try await captureImages(displayID) })
+    }
+
+    @discardableResult
+    private func enqueueShot(operation: @escaping @MainActor () async throws -> [Data]?, finished: @escaping @MainActor () -> Void = {}) -> Bool {
         // Reserve a slot now; rapid presses must not replace or reorder earlier shots.
         guard pendingCount + inFlight.count < 6 else {
             captureError = "最多保留 6 张截图，请先发送或清空待发送截图"
-            return
+            return false
         }
         pendingCaptureCount += 1
         let token = captureGeneration
         let previous = captureTail
         captureTail = Task {
             await previous?.value
+            defer { finished() }
             guard captureGeneration == token, !Task.isCancelled else { return }
             defer { if captureGeneration == token { pendingCaptureCount -= 1 } }
             do {
-                let images = try await captureImages(displayID)
+                guard let images = try await operation() else { return }
                 guard captureGeneration == token, !Task.isCancelled else { return }
                 let byteCount = (pendingShots + inFlight + [images]).flatMap { $0 }.reduce(0) { $0 + $1.count }
                 guard byteCount < 24 * 1024 * 1024 else { throw CaptureError.message("截图总量过大，请先发送或清空") }
@@ -232,6 +301,7 @@ final class ScreenQuestionController {
                 captureError = "截图失败：" + error.localizedDescription
             }
         }
+        return true
     }
 
     func sendPending() {
@@ -296,6 +366,32 @@ final class ScreenQuestionController {
     }
 
     private static func capture(displayID: CGDirectDisplayID) async throws -> [Data] {
+        try await capture(displayID: displayID, region: nil)
+    }
+
+    static func captureConfiguration(pixelSize: CGSize, displaySize: CGSize, region: ScreenCaptureRegion?) throws -> SCStreamConfiguration {
+        guard [displaySize.width, displaySize.height, pixelSize.width, pixelSize.height].allSatisfy({ $0.isFinite && $0 > 0 }) else { throw CaptureError.message("显示器尺寸无效") }
+        let config = SCStreamConfiguration()
+        let bounds = CGRect(origin: .zero, size: displaySize)
+        let rect: CGRect
+        if let region {
+            guard region.displaySize == displaySize else { throw CaptureError.message("显示器设置已变化，请重新框选") }
+            guard [region.rect.minX, region.rect.minY, region.rect.width, region.rect.height].allSatisfy(\.isFinite) else { throw CaptureError.message("选区无效，请重新框选") }
+            rect = region.rect.standardized.intersection(bounds)
+            guard !rect.isNull, rect.width >= 8, rect.height >= 8 else { throw CaptureError.message("选区无效，请重新框选") }
+            config.sourceRect = rect
+        } else { rect = bounds }
+        let nativeWidth = rect.width * pixelSize.width / displaySize.width
+        let nativeHeight = rect.height * pixelSize.height / displaySize.height
+        let scale = min(1, 4096 / max(nativeWidth, nativeHeight))
+        config.width = max(1, Int((nativeWidth * scale).rounded()))
+        config.height = max(1, Int((nativeHeight * scale).rounded()))
+        config.showsCursor = false
+        config.captureResolution = .best
+        return config
+    }
+
+    private static func capture(displayID: CGDirectDisplayID, region: ScreenCaptureRegion?) async throws -> [Data] {
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
         try Task.checkCancellation()
         guard let display = content.displays.first(where: { $0.displayID == displayID }) else {
@@ -303,12 +399,8 @@ final class ScreenQuestionController {
         }
         let ownApps = content.applications.filter { $0.processID == ProcessInfo.processInfo.processIdentifier }
         let filter = SCContentFilter(display: display, excludingApplications: ownApps, exceptingWindows: [])
-        let config = SCStreamConfiguration()
-        let scale = min(1, 4096.0 / Double(max(CGDisplayPixelsWide(displayID), CGDisplayPixelsHigh(displayID))))
-        config.width = max(1, Int(Double(CGDisplayPixelsWide(displayID)) * scale))
-        config.height = max(1, Int(Double(CGDisplayPixelsHigh(displayID)) * scale))
-        config.showsCursor = false
-        config.captureResolution = .best
+        let config = try captureConfiguration(pixelSize: CGSize(width: CGDisplayPixelsWide(displayID), height: CGDisplayPixelsHigh(displayID)),
+                                               displaySize: CGSize(width: display.width, height: display.height), region: region)
         let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
         try Task.checkCancellation()
         var images = [image]
@@ -351,6 +443,8 @@ struct ScreenQuestionView: View {
             HStack {
                 Text("截图解题").font(.title2.bold())
                 Spacer()
+                Button(controller.isSelectingRegion ? "取消框选" : "区域截图") { controller.captureRegionScreenshot() }
+                    .help("⌃⌥⌘4：拖拽框选并累积，Esc / 右键取消")
                 Button("悬浮答案") { controller.showFloatingAnswer?() }
                     .help("置顶显示答案，不抢输入焦点；⌃⌥⌘Space 显示或收起")
                 Button("截图排错") { controller.captureErrorScreenshot() }
@@ -379,7 +473,7 @@ struct ScreenQuestionView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             HStack {
-                Text("截图 \(ScreenQuestionController.shortcut) · 发送 \(ScreenQuestionController.sendShortcut) · 清空 \(ScreenQuestionController.clearShortcut)")
+                Text("全屏 \(ScreenQuestionController.shortcut) · 区域 \(ScreenQuestionController.regionShortcut) · 发送 \(ScreenQuestionController.sendShortcut) · 清空 \(ScreenQuestionController.clearShortcut)")
                 Spacer()
                 Button("授权屏幕录制") {
                     if !CGRequestScreenCaptureAccess(),
@@ -389,7 +483,7 @@ struct ScreenQuestionView: View {
                 }
             }
             .font(.callout)
-            Text("截图仅暂存在内存中，发送时才提交至模型服务。可滚动页面后继续截图，再统一发送。快捷键不切页、不弹窗。")
+            Text("全屏与区域截图可混合累积后一起发送，仅暂存在内存中。区域截图在鼠标所在显示器内拖拽框选；全屏截图不显示选区。")
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(24)

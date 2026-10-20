@@ -7,6 +7,7 @@ xcrun swiftc -swift-version 6 -parse-as-library \
   'Copilot Native/ChatCompletionClient.swift' \
   'Copilot Native/RemoteAISettings.swift' \
   'Copilot Native/ScreenQuestionController.swift' \
+  'Copilot Native/RegionScreenshotSelector.swift' \
   'Copilot Native/ScreenAnswerPanel.swift' \
   'Copilot Native/MarkdownDocumentView.swift' \
   tests/ScreenQuestionClientTests.swift -o "$test_dir/test-screen-questions"

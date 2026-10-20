@@ -161,9 +161,9 @@ struct ChatCompletionClient: InterviewAnswering {
         var imageIndex = 1
         let groups = screenshotImageCounts.enumerated().map { index, count in
             defer { imageIndex += count }
-            return "截图\(index + 1)：图片\(imageIndex)至\(imageIndex + count - 1)，第一张为全屏，其余为该屏局部放大。"
+            return "截图\(index + 1)：图片\(imageIndex)至\(imageIndex + count - 1)，第一张为本次截取的完整画面（全屏或框选区域），其余为同次截图的局部放大。"
         }.joined(separator: "\n")
-        return ScreenshotConversationMessage(role: "user", content: "这些图片按截图时间先后排列，每次截图包含一张完整屏幕，并可能紧跟同一屏幕的四张重叠局部放大图。多次截图可能是同一道题滚动后的不同部分。请根据重叠文字、题号、代码、选项和输入输出样例合并题干，再解答；不要重复作答。真正独立的题目分别回答。缺少条件时明确指出，不得编造。\n" + groups, imageJPEGs: imageJPEGs)
+        return ScreenshotConversationMessage(role: "user", content: "这些图片按截图时间先后排列，每次截图可以是全屏或用户框选的局部区域，并可能紧跟同次截图的四张重叠放大图。多次截图可能是同一道题滚动后的不同部分，框选图不代表屏幕或题目的全部内容。请根据重叠文字、题号、代码、选项和输入输出样例合并题干，再解答；不要重复作答。真正独立的题目分别回答。缺少条件时明确指出，不得编造。\n" + groups, imageJPEGs: imageJPEGs)
     }
 
     static func screenshotRequestBody(imageJPEGs: [Data], configuration: AIConfiguration, screenshotImageCounts: [Int] = []) throws -> Data {
