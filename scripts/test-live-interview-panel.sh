@@ -15,6 +15,9 @@ xcrun swiftc -swift-version 6 -parse-as-library \
   'Copilot Native/InterviewKnowledgeEngine.swift' \
   'Copilot Native/InterviewKnowledgeView.swift' \
   'Copilot Native/InterviewQuestionExtractor.swift' \
+  'Copilot Native/QuestionSearchIndex.swift' \
+  'Copilot Native/QuestionLibrary.swift' \
+  'Copilot Native/QuestionAnswer.swift' \
   'Copilot Native/AIAnswerController.swift' \
   'Copilot Native/SpeechSettings.swift' \
   'Copilot Native/SpeechAudioCapture.swift' \

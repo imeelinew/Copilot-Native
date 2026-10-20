@@ -7,6 +7,7 @@ struct InterviewTurn: Identifiable {
     var answer = ""
     var references = KnowledgeRetrieval.empty
     var state: AIAnswerState = .waiting
+    var savedQuestionTitle: String?
     let createdAt = Date()
 }
 
@@ -54,10 +55,39 @@ final class LiveInterviewController {
     @ObservationIgnored private var consumedStarts: Set<Int> = []
     @ObservationIgnored private var transcriptPrefix = ""
     @ObservationIgnored private var lastAnalyzedSegments: [InterviewTranscriptSegment] = []
-    @ObservationIgnored private var analysisRetryAfter = Date.distantPast
+    @ObservationIgnored private var analysisRetryTask: Task<Void, Never>?
+    @ObservationIgnored private var analysisFailures = 0
+    @ObservationIgnored private var failedAnalysisSegments: [InterviewTranscriptSegment] = []
+    @ObservationIgnored private var library: QuestionLibrary?
+    @ObservationIgnored private var libraryScope: LibraryScope?
+    @ObservationIgnored private let extractQuestion: @Sendable ([InterviewTranscriptSegment], String, AIConfiguration) async throws -> InterviewQuestionDecision
+    @ObservationIgnored private let analysisRetryDelay: Duration
     @ObservationIgnored private var speechSettings: SpeechSettings?
     @ObservationIgnored private var aiSettings: RemoteAISettings?
     @ObservationIgnored private var knowledge: InterviewKnowledgeBase?
+
+    init(analysisRetryDelay: Duration = .seconds(1),
+         extractQuestion: @escaping @Sendable ([InterviewTranscriptSegment], String, AIConfiguration) async throws -> InterviewQuestionDecision = {
+             try await InterviewQuestionExtractor().extract(segments: $0, recentContext: $1, configuration: $2)
+         }) {
+        self.analysisRetryDelay = analysisRetryDelay
+        self.extractQuestion = extractQuestion
+    }
+
+    func configureLibrary(_ library: QuestionLibrary, scope: LibraryScope? = nil) {
+        self.library = library
+        libraryScope = scope
+    }
+
+    private func cancelAnalysis() {
+        settlementID = UUID()
+        settlementTask?.cancel()
+        settlementTask = nil
+        analysisRetryTask?.cancel()
+        analysisRetryTask = nil
+        analysisFailures = 0
+        failedAnalysisSegments = []
+    }
 
     var isActive: Bool {
         switch status {
@@ -89,9 +119,7 @@ final class LiveInterviewController {
     }
 
     func automaticAnswersChanged() {
-        settlementID = UUID()
-        settlementTask?.cancel()
-        settlementTask = nil
+        cancelAnalysis()
         if speechSettings?.automaticAnswers == true { scheduleSubmission() }
         else { questionAnalysisStatus = "自动回答已暂停，可按 ⌃⌥⌘A 手动提交" }
     }
@@ -109,6 +137,7 @@ final class LiveInterviewController {
             return
         }
         configure(speech: speech, ai: ai, knowledge: knowledge)
+        cancelAnalysis()
         let token = UUID()
         generation = token
         finishing = false
@@ -124,7 +153,6 @@ final class LiveInterviewController {
                 utterances = [:]
                 consumedStarts = []
                 lastAnalyzedSegments = []
-                analysisRetryAfter = .distantPast
                 questionAnalysisStatus = "等待面试问题"
                 transcriptPrefix = transcript.isEmpty ? "" : transcript + "\n"
                 if !draft.isEmpty {
@@ -164,8 +192,7 @@ final class LiveInterviewController {
                 } catch {
                     connection.close()
                     await capture.stop()
-                    settlementTask?.cancel()
-                    settlementTask = nil
+                    cancelAnalysis()
                     guard !Task.isCancelled, generation == token, !finishing else { break }
                     // Startup/permission failures require a user action, not repeated OS prompts.
                     let retryable = acquisitionStarted && ((error as? SpeechError)?.canRetry ?? true)
@@ -217,8 +244,7 @@ final class LiveInterviewController {
         if status != .listening { sessionTask?.cancel() }
         finishing = true
         status = .stopping
-        settlementTask?.cancel()
-        settlementTask = nil
+        cancelAnalysis()
         stopTask = Task { [self] in
             // Stop capture, drain queued packets, then wait for the corrected final transcript.
             let deadline = Task { [weak self] in
@@ -242,7 +268,7 @@ final class LiveInterviewController {
         finishing = true
         sessionTask?.cancel()
         stopTask?.cancel()
-        settlementTask?.cancel()
+        cancelAnalysis()
         cancelAnswer()
         connection?.close()
         let oldCapture = capture
@@ -253,26 +279,45 @@ final class LiveInterviewController {
         status = .idle
     }
 
-    private func receive(_ result: SpeechRecognitionResult) {
+    func receive(_ result: SpeechRecognitionResult, allowStopped: Bool = false) {
         if let text = result.text { transcript = transcriptPrefix + text }
         if let snapshot = result.utterances {
             // ASR omits a zero start_time on the first utterance; keep it as segment 0.
-            utterances = Dictionary(snapshot.map { ($0.start_time ?? 0, $0) }, uniquingKeysWith: { _, latest in latest })
+            for utterance in snapshot {
+                let id = utterance.start_time ?? 0
+                // Retain earlier confirmed segments if an update only includes a tail.
+                if utterances[id]?.definite != true || utterance.definite == true { utterances[id] = utterance }
+            }
         }
         let pending = utterances.sorted { $0.key < $1.key }.filter { !consumedStarts.contains($0.key) }
         draft = pending.map(\.value.text).joined()
-        scheduleSubmission()
+        scheduleSubmission(allowStopped: allowStopped)
     }
 
     private func scheduleSubmission(allowStopped: Bool = false) {
         guard speechSettings?.automaticAnswers == true, !isEditing,
               (!finishing || allowStopped), (status == .listening || (allowStopped && status == .idle)),
-              settlementTask == nil, Date() >= analysisRetryAfter else { return }
+              settlementTask == nil else { return }
         let segments = utterances.sorted { $0.key < $1.key }
             .filter { !consumedStarts.contains($0.key) && $0.value.definite == true }
             .prefix(8)
             .map { InterviewTranscriptSegment(id: $0.key, text: $0.value.text) }
         guard !segments.isEmpty, segments != lastAnalyzedSegments else { return }
+        if segments != failedAnalysisSegments {
+            analysisRetryTask?.cancel()
+            analysisRetryTask = nil
+            analysisFailures = 0
+        }
+        guard analysisRetryTask == nil, analysisFailures < 3 else { return }
+        if let local = InterviewQuestionExtractor.localDecision(segments: segments) {
+            lastAnalyzedSegments = segments
+            consumedStarts.formUnion(local.consumed_ids)
+            rebuildDraft()
+            questionAnalysisStatus = "已识别自我介绍请求，优先使用已保存题库"
+            appendQuestion(local.question)
+            scheduleSubmission(allowStopped: allowStopped)
+            return
+        }
         guard let configuration = aiSettings?.activeConfiguration else {
             questionAnalysisStatus = "请配置 AI 模型后自动分析，或点击立即回答"
             return
@@ -287,13 +332,13 @@ final class LiveInterviewController {
             do {
                 // The ASR final is already endpointed. Do not wait for a second silent interval.
                 try await Task.sleep(for: .milliseconds(150))
-                let decision = try await InterviewQuestionExtractor().extract(
-                    segments: segments, recentContext: String(context.suffix(2_000)), configuration: configuration
-                )
+                let decision = try await extractQuestion(segments, String(context.suffix(2_000)), configuration)
                 try Task.checkCancellation()
                 guard settlementID == settlementToken, !isEditing,
                       speechSettings?.automaticAnswers == true else { return }
                 lastAnalyzedSegments = segments
+                analysisFailures = 0
+                failedAnalysisSegments = []
                 consumedStarts.formUnion(decision.consumed_ids)
                 rebuildDraft()
                 switch decision.action {
@@ -311,8 +356,20 @@ final class LiveInterviewController {
             } catch is CancellationError { }
             catch {
                 guard !Task.isCancelled, settlementID == settlementToken else { return }
-                questionAnalysisStatus = "问题分析失败：" + error.localizedDescription
-                analysisRetryAfter = Date().addingTimeInterval(3)
+                analysisFailures += 1
+                failedAnalysisSegments = segments
+                settlementTask = nil
+                if analysisFailures < 3 {
+                    questionAnalysisStatus = "问题分析失败，正在重试（\(analysisFailures)/2）：" + error.localizedDescription
+                    analysisRetryTask = Task {
+                        do { try await Task.sleep(for: analysisRetryDelay) } catch { return }
+                        guard !Task.isCancelled, settlementID == settlementToken else { return }
+                        analysisRetryTask = nil
+                        scheduleSubmission(allowStopped: allowStopped)
+                    }
+                } else {
+                    questionAnalysisStatus = "自动分析连续失败，文字已保留，按 ⌃⌥⌘A 立即回答：" + error.localizedDescription
+                }
             }
         }
     }
@@ -322,9 +379,7 @@ final class LiveInterviewController {
     }
 
     func beginEditing() {
-        settlementID = UUID()
-        settlementTask?.cancel()
-        settlementTask = nil
+        cancelAnalysis()
         questionEdit = draft
         isEditing = true
     }
@@ -336,9 +391,7 @@ final class LiveInterviewController {
     }
 
     func discardDraft() {
-        settlementID = UUID()
-        settlementTask?.cancel()
-        settlementTask = nil
+        cancelAnalysis()
         consumedStarts.formUnion(utterances.keys)
         draft = ""
         isEditing = false
@@ -389,11 +442,22 @@ final class LiveInterviewController {
         guard let index = turns.firstIndex(where: { $0.id == id }) else { return }
         turns[index].answer = ""
         turns[index].references = .empty
+        turns[index].savedQuestionTitle = nil
+        let question = turns[index].question
+        if let saved = library?.interviewMatch(question, preferredScope: libraryScope) {
+            turns[index].answer = saved.answer
+            turns[index].savedQuestionTitle = saved.question
+            turns[index].state = .complete
+            return
+        }
+        if QuestionSearchIndex.isIntroductionRequest(question) {
+            turns[index].state = .failed("题库中未找到唯一匹配的自我介绍，请先保存或选择对应题库版本；不会自动编造个人信息")
+            return
+        }
         guard let configuration = aiSettings?.activeConfiguration else {
             turns[index].state = .needsConfiguration
             return
         }
-        let question = turns[index].question
         let history = Array(turns[..<index].filter { $0.state == .complete }.suffix(4))
         let previousProject = history.last?.references.projectIDs.count == 1 ? history.last?.references.projectIDs.first : nil
         let scope = knowledge?.scope ?? .automatic

@@ -200,7 +200,9 @@ final class AppBootstrap {
                     InterviewCapsule.self
                 )
             }
-            library = try QuestionLibrary(container: container)
+            let loadedLibrary = try QuestionLibrary(container: container)
+            library = loadedLibrary
+            live.configureLibrary(loadedLibrary)
             startupError = nil
         } catch {
             library = nil

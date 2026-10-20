@@ -79,7 +79,7 @@ struct LiveInterviewView: View {
                         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
                     }
                 }
-                Text("线上面试建议选会议应用的声音，避免把自己的回答识别成新问题。")
+                Text("所有识别语音均视为面试官发言；线上面试请选择会议应用声音。")
                     .font(.caption).foregroundStyle(.secondary)
             } else {
                 Text("使用系统当前输入设备；切换麦克风后会自动恢复监听。")
@@ -306,6 +306,9 @@ private struct LiveInterviewAnswerView: View {
                         }
                     }
                     Divider()
+                    if let title = turn.savedQuestionTitle {
+                        Text("来自已保存题库 · " + title).font(.caption).foregroundStyle(.secondary)
+                    }
                     switch turn.state {
                     case .waiting, .retrieving, .streaming:
                         HStack {

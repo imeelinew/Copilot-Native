@@ -175,11 +175,13 @@ struct MainWindowView: View {
             Text(errorMessage ?? "")
         }
         .onAppear {
+            live.configureLibrary(library, scope: selectedScope)
             ensureHierarchySelection()
             synchronizeSearch()
             searchFocused = true
         }
         .onChange(of: searchTrigger) { _, _ in
+            live.configureLibrary(library, scope: selectedScope)
             ensureHierarchySelection()
             synchronizeSearch()
         }

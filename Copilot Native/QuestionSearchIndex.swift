@@ -8,6 +8,37 @@ struct QuestionSnapshot: Equatable, Sendable {
 }
 
 struct QuestionSearchIndex {
+    /// Only match the question title, never incidental words in a saved answer.
+    /// Ambiguous saved versions require a preferred library scope or a manual choice.
+    func interviewMatch(_ query: String, allowedIDs: Set<UUID>? = nil) -> QuestionSnapshot? {
+        let key = Self.interviewKey(query)
+        guard !key.isEmpty else { return nil }
+        let matches = items.filter {
+            (allowedIDs == nil || allowedIDs!.contains($0.snapshot.id)) && Self.interviewKey($0.snapshot.question) == key
+        }.map(\.snapshot).sorted { $0.updatedAt > $1.updatedAt }
+        guard Set(matches.map(\.answer)).count == 1 else { return nil }
+        return matches.first
+    }
+
+    static func isIntroductionRequest(_ text: String) -> Bool {
+        let value = text.filter { !$0.isWhitespace && !$0.isPunctuation }
+        guard value.count <= 65, !value.hasPrefix("我"),
+              !["刚才", "提到", "里面", "为什么", "怎么", "修改", "优化", "改成", "英文", "英语", "项目", "不足", "分钟", "秒", "然后", "再说", "以及", "并且", "另外", "我先", "我来", "我叫", "我的名字"].contains(where: value.contains) else { return false }
+        return value == "自我介绍" || value.contains("自我介绍") && ["你", "您", "请", "做个", "做一个", "来一个", "来个"].contains(where: value.contains)
+            || ["介绍一下自己", "介绍下自己", "介绍一下你自己", "介绍下你自己"].contains(where: value.contains)
+    }
+
+    private static func interviewKey(_ text: String) -> String {
+        if isIntroductionRequest(text) { return "自我介绍" }
+        var value = PreparedText.normalize(text).filter { !$0.isWhitespace && !$0.isPunctuation }
+        for prefix in ["面试官您好", "你好", "麻烦你", "麻烦", "请问", "请你", "请", "你能不能", "你能", "能不能"] {
+            if value.hasPrefix(prefix) { value.removeFirst(prefix.count) }
+        }
+        for suffix in ["好吗", "一下吧", "吗", "呢", "吧"] {
+            if value.hasSuffix(suffix) { value.removeLast(suffix.count) }
+        }
+        return value
+    }
     private struct PreparedText {
         let normalized: String
         let pinyin: String

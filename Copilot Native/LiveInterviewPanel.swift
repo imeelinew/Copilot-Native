@@ -192,6 +192,7 @@ private struct FloatingInterviewAnswer: View {
                 VStack(alignment: .leading, spacing: 12) {
                     if let turn = controller.selectedTurn {
                         Text(turn.question).font(.headline).textSelection(.enabled)
+                        if let title = turn.savedQuestionTitle { Text("来自已保存题库 · " + title).font(.caption).foregroundStyle(.secondary) }
                         if [.waiting, .retrieving, .streaming].contains(turn.state) {
                             Text(turn.state == .streaming ? "正在生成回答…" : "正在检索本地资料…")
                                 .font(.caption).foregroundStyle(.secondary)
@@ -244,6 +245,7 @@ private struct FloatingInterviewAnswer: View {
             }
             Text(speech.automaticAnswers ? "自动回答开启 · ⌃⌥⌘P 暂停" : "自动回答暂停 · ⌃⌥⌘P 恢复")
                 .foregroundStyle(.secondary)
+            if speech.automaticAnswers { Text(controller.questionAnalysisStatus).foregroundStyle(.secondary) }
             if !controller.draft.isEmpty { Text("待提交：" + controller.draft).lineLimit(3).foregroundStyle(.secondary) }
             if let notice = controller.notice { Text(notice).foregroundStyle(.orange) }
             if case .failed(let message) = controller.status { Text(message).foregroundStyle(.red) }

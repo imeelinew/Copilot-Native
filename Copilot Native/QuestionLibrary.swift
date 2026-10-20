@@ -62,6 +62,14 @@ final class QuestionLibrary {
             .filter { item in scopeContains(item, scope: scope) }
     }
 
+    func interviewMatch(_ query: String, preferredScope: LibraryScope?) -> QuestionSnapshot? {
+        if let preferredScope {
+            let ids = Set(items.filter { scopeContains($0, scope: preferredScope) }.map(\.id))
+            if let match = index.interviewMatch(query, allowedIDs: ids) { return match }
+        }
+        return index.interviewMatch(query)
+    }
+
     func item(id: UUID) -> QuestionAnswer? { itemsByID[id] }
     func package(id: UUID) -> InterviewPackage? { packagesByID[id] }
     func capsule(id: UUID) -> InterviewCapsule? { capsulesByID[id] }
